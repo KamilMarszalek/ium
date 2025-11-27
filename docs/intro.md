@@ -7,11 +7,11 @@ Autorzy: Damian D'Souza, Kamil Marszałek
 
 ## 1. Cel projektu z perspektywy Nocarz
 
-W ramach projektu wcielamy się w rolę analityków pracujących dla portalu **Nocarz**. Naszym zadaniem jest odpowiedź na zgłoszoną przez Państwa potrzebę:
+W ramach projektu wcielamy się w rolę analityków pracujących dla portalu **Nocarz**. Naszym zadaniem jest odpowiedź na zgłoszoną potrzebę:
 
 > „Nie do końca rozumiemy jakimi kryteriami kierują się klienci, którzy rezerwują dłuższe noclegi. Taka informacja bardzo pomogłaby naszym konsultantom.”
 
-Celem projektu jest więc **zrozumienie, co wyróżnia rezerwacje długich pobytów** – zarówno po stronie klientów, jak i ofert oraz kontekstu (czas, sezon, cena). Efektem prac ma być zestaw **konkretnych wniosków i narzędzi**, które pozwolą konsultantom:
+Celem projektu jest więc zrozumienie, co wyróżnia rezerwacje długich pobytów – zarówno po stronie klientów, jak i ofert oraz kontekstu (czas, sezon, cena). Efektem prac ma być zestaw konkretnych wniosków i narzędzi, które pozwolą konsultantom:
 
 - lepiej doradzać klientom planującym dłuższe wyjazdy,
 - szybciej identyfikować oferty atrakcyjne dla długich pobytów,
@@ -19,55 +19,26 @@ Celem projektu jest więc **zrozumienie, co wyróżnia rezerwacje długich pobyt
 
 ---
 
-## 2. Jakie pytania chcemy dla Państwa rozwiązać?
+## 2. Wstępna definicja problemu
 
-Na podstawie opisu zadania proponujemy, aby projekt odpowiedział przede wszystkim na następujące pytania:
+Żeby móc przejść do analiz, potrzebujemy uzgodnić kilka kwestii.
 
-1. **Jakie cechy ofert** (lokalizacja, typ lokalu, cena, udogodnienia, opinie) najczęściej pojawiają się przy dłuższych pobytach?
-2. **Jakie cechy klientów** (np. kraj pochodzenia, historia rezerwacji, liczba osób w rezerwacji) są typowe dla osób rezerwujących na dłużej?
-3. **Jak ważny jest czas i sezon** – czy długość pobytu zależy istotnie od miesiąca, dnia tygodnia, okresów wakacyjnych/feryjnych itd.?
-4. **Czy sposób korzystania z serwisu** (np. długość sesji, liczba przeglądanych ofert, użyte filtry) różni się między klientami rezerwującymi krótko a tymi, którzy rezerwują dłuższy pobyt?
-5. **Czy da się z wyprzedzeniem oszacować**, że dana rezerwacja będzie raczej długim pobytem (oraz co ma na to największy wpływ)?
-
-Odpowiedzi na te pytania chcemy sformułować w możliwie „ludzkiej” formie – tak, aby można je było wykorzystać w codziennej pracy konsultantów.
-
----
-
-## 3. Wstępna definicja problemu
-
-Żeby móc przejść do analiz, potrzebujemy wspólnie z Państwem uzgodnić kilka kwestii.
-
-### 3.1. Co uznajemy za „długi pobyt”?
+**Co uznajemy za „długi pobyt”**
 
 Na razie zakładamy, że:
 
 - długość pobytu będziemy liczyć jako liczbę nocy między datą zameldowania a datą wymeldowania,
-- „długi pobyt” zostanie zdefiniowany jako pobyt trwający co najmniej **X nocy** (np. 7, 14, 30 – do ustalenia).
-
-Od przyjętej definicji zależy m.in. to, jak będą wyglądały statystyki i modele, dlatego traktujemy to jako kluczowe ustalenie biznesowe.
-
-### 3.2. Jakie rezerwacje bierzemy pod uwagę?
-
-Do doprecyzowania:
-
-- jaki **okres historyczny** powinniśmy analizować (np. ostatnie 12 / 24 miesiące, wszystkie dostępne dane),
-- czy do analizy włączamy:
-  - wyłącznie rezerwacje, które się odbyły,
-  - także rezerwacje anulowane,
-  - inne statusy (np. w toku),
-- w jaki sposób traktować anulacje (np. osobna kategoria do analizy, czy wyłącznie jako kontekst).
+- „długi pobyt” zostanie zdefiniowany jako pobyt trwający co najmniej X nocy (np. 7, 14, 30 – do ustalenia).
 
 ---
 
-## 4. Nasza propozycja podejścia
+## 3. Nasza propozycja podejścia
 
-Chcemy połączyć **analizę danych** z **modelem przewidującym długość pobytu**, ale z naciskiem na **wyjaśnienie**, a nie tylko „surową predykcję”.
-
-### 4.1. Część analityczna (opisowa)
+### 3.1. Część analityczna (opisowa)
 
 Po otrzymaniu danych planujemy:
 
-- przygotować podstawowe statystyki długości pobytów (rozkłady, typowe wartości, „ogon” długich pobytów),
+- przygotować podstawowe statystyki długości pobytów (rozkłady, typowe wartości),
 - sprawdzić, jak długość pobytu zależy od:
   - regionu i typu lokalu,
   - pory roku i dnia tygodnia,
@@ -75,9 +46,9 @@ Po otrzymaniu danych planujemy:
   - historii klienta,
 - porównać zachowania klientów rezerwujących krótko vs długo (np. jak długo szukają, ile ofert przeglądają, z jakich filtrów korzystają – jeśli takie dane będą dostępne).
 
-Efektem tej części będzie **zestaw wniosków i wykresów**, które można przedstawić w formie krótkiego raportu dla biznesu.
+Efektem tej części będzie zestaw wniosków i wykresów.
 
-### 4.2. Część modelowa (predykcyjna)
+### 3.2. Część modelowa (predykcyjna)
 
 Równolegle chcemy zbudować prosty model, który:
 
