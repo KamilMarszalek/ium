@@ -12,7 +12,7 @@ Obecnie brakuje nam wiedzy o czynnikach, które wpływają na długość rezerwa
 
 To utrudnia pracę konsultantom - nie mogą skutecznie doradzać właścicielom, jakie udogodnienia warto dodać, żeby przyciągnąć klientów szukających dłuższych pobytów.
 
-**Cel projektu:** Zidentyfikować kluczowe czynniki (cechy oferty i profilu klienta), które zwiększają prawdopodobieństwo długiej rezerwacji. Dzięki temu Konsultanci będą mogli konkretnie wskazać oferentom, co zmienić w ofercie (np. dodać szybkie Wi-Fi, wprowadzić rabaty tygodniowe), żeby zwiększyć szansę na dłuższe rezerwacje.
+**Cel projektu:** Zidentyfikować kluczowe czynniki (cechy oferty i profilu klienta), które zwiększają prawdopodobieństwo długiej rezerwacji. Dzięki temu konsultanci będą mogli konkretnie wskazać oferentom, co zmienić w ofercie (np. dodać szybkie Wi-Fi, wprowadzić rabaty tygodniowe), żeby zwiększyć szansę na dłuższe rezerwacje.
 
 ## 2. Podejście modelowe
 
