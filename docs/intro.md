@@ -40,11 +40,7 @@ Oba umożliwiają łatwe wyodrębnienie wag cech.
 
 ### 2.3 Kryteria sukcesu
 
-Kryterium biznesowe:
 Możliwość wygenerowania raportu "TOP 5 cech" wpływających na długość pobytu
-
-Kryterium analityczne:
-- AUC > 0.7
 
 ## 3. Analiza dostępnych danych
 
