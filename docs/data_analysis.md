@@ -21,8 +21,8 @@ W pliku `reviews.csv` znajduje się 6 atrybutów:
 - `reviewer_name`: Imię recenzenta.
 - `comments`: Treść recenzji.
 
-### Dane session.csv
-W pliku `session.csv` znajduje się 7 atrybutów:
+### Dane sessions.csv
+W pliku `sessions.csv` znajduje się 7 atrybutów:
 - `action`: Typ akcji wykonanej przez użytkownika (np. wyszukiwanie, obejrzenie oferty, rezerwacja oferty).
 - `user_id`: Identyfikator użytkownika wykonującego akcję.
 - `timestamp`: Znacznik czasu wykonania akcji.
