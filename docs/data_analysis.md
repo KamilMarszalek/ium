@@ -68,3 +68,9 @@ Atrybuty w pliku `listings.csv` można podzielić zgrubsza na kilka kategorii:
     - `review_scores_rating`: Ogólna ocena lokalu.
     - `review_scores_value`: Ocena stosunku jakości do ceny.
     - `number_of_reviews`: Liczba recenzji. Większa liczba recenzji może świadczyć o popularności i zaufaniu do lokalu.
+
+Z pliku `users.csv` nie użyjemy danych personalnych takich jak imię, nazwisko czy ulica. Być może użyjemy atrybut `city`, aby zobaczyć, czy lokalizacja użytkownika ma wpływ na długość rezerwacji np. czy osoby z większych miast rezerwują dłuższe pobyty.
+
+Dane, które są w pliku `reviews.csv` prawdopodobnie nie będą użyte w naszym modelu, ponieważ recenzje są dodawane po zakończeniu pobytu i nie wpływają na decyzję o długości rezerwacji.
+Ważniejsza może być zagregowana ocena, które jest już w pliku `listings.csv`.
+
