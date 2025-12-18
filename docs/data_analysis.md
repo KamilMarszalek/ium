@@ -74,11 +74,39 @@ Z pliku `users.csv` nie użyjemy danych personalnych takich jak imię, nazwisko 
 Dane, które są w pliku `reviews.csv` prawdopodobnie nie będą użyte w naszym modelu, ponieważ recenzje są dodawane po zakończeniu pobytu i nie wpływają na decyzję o długości rezerwacji.
 Ważniejsza może być zagregowana ocena, które jest już w pliku `listings.csv`.
 
+## Problemy ze złączeniami danych między plikami
+
+Aby wykorzystać dane z różnych plików, musimy je łączyć po kluczach. 
+### Złączenie `sessions.csv` ↔ `listings.csv` 
+Dla `listings.csv` i `sessions.csv` kluczami są odpowiednio `listings.id` oraz `sessions.listing_id`. Analizę pokrycia wykonujemy w dwóch ujęciach: pokrycie wierszy po złączeniu oraz pokrycie unikalnych kluczy (różnorodności ofert).
+
+- Bez filtrowania po `action`: ok. 74% rekordów `sessions.csv` ma niepusty `listing_id`, a spośród nich ok. 67.6% znajduje dopasowanie w `listings.csv` (łączny row coverage ~50.1%). Jednocześnie tylko ok. 13.2% unikalnych `listing_id` obserwowanych w `sessions.csv` występuje w `listings.csv`, co sugeruje, że `listings.csv` jest ograniczonym podzbiorem ofert, a dopasowania dotyczą głównie najczęściej występujących listingów.
+
+- Dla akcji `book_listing` (rezerwacje): ok. 80% rekordów ma niepusty `listing_id`, jednak tylko ok. 7.7% z nich znajduje dopasowanie w `listings.csv` (łączny row coverage ~6.2%). Oznacza to, że cechy ofert z `listings.csv` będą dostępne tylko dla niewielkiej części rezerwacji; trening modelu oparty głównie o cechy ofert może być przez to niemożliwy lub silnie obciążony selekcją danych.
+
+### Złączenie `sessions.csv` ↔ `users.csv`
+Klucz łączący to `sessions.user_id` oraz `users.id`.
+
+- Bez filtrowania po `action`: ok. 80% rekordów `sessions.csv` ma niepusty `user_id`, a spośród nich ok. 80% znajduje dopasowanie w `users.csv` (łączny row coverage ~64%). Pokrycie unikalnych `user_id` wynosi ok. 80%, co sugeruje, że dla większości użytkowników obecnych w sesjach istnieją odpowiadające im dane w `users.csv`, choć ok. 20% identyfikatorów nie jest możliwe do sparowania.
+
+- Dla akcji `book_listing` (rezerwacje): wyniki są bardzo zbliżone.
+
+### Złączenie `reviews.csv` ↔ `users.csv`
+Klucz łączący to `reviews.reviewer_id` oraz `users.id`.
+
+- Ok. 80% rekordów `reviews.csv` ma niepusty `reviewer_id`, a spośród nich ok. 80% znajduje dopasowanie w `users.csv` (łączny row coverage ~64%). Pokrycie unikalnych `reviewer_id` wynosi ok. 80%.
+
+### Złączenie `reviews.csv` ↔ `listings.csv`
+Klucz łączący to `reviews.listing_id` oraz `listings.id`.
+
+- Ok. 80.1% rekordów w `reviews.csv` ma niepusty `listing_id`. Jednak tylko ok. 7.6% z nich znajduje dopasowanie w `listings.csv`, co daje łączne pokrycie wierszy po złączeniu na poziomie ok. 6.1%. Pokrycie po unikalnych kluczach jest również niskie: tylko ok. 8.0% unikalnych `listing_id` z `reviews.csv` występuje w `listings.csv` (`unique_key_coverage` ~0.0803). Wskazuje to, że `listings.csv` jest ograniczonym podzbiorem ofert i nie pozwala na wzbogacenie większości recenzji o cechy oferty.
+
+
+
 ## Braki danych
 Przeanalizowaliśmy braki danych w plikach. Braki są dosyć duże:
 - Plik `listings.csv` ma braki we wszystkich kolumnach - minimum 18% w kolumnie `host_has_profile_pic`, maksimum 100% w kolumnie `calendar_updated`. Jednak dla większości kolumn braki są w przedziale od ok. 20% do 40%.
 - Plik `sessions.csv` również ma braki we wszystkich kolumnach minimum ok. 20% w kolumnach `action`, `user_id`, `timestamp,
 maksymalne braki to ok. 94% w kolumnach `booking_date`, `booking_duration`, `booking_id`. Braki w kolumnach związanych z rezerwacjami są zrozumiałe, ponieważ nie każda sesja kończy się rezerwacją. Jednak zmienną celową `long_stay` można będzie utworzyć tylko dla około 4% rekordów, gdyż braki w kolumnach `booking_date` i `booking_duration` nie występują jednocześnie.
 - Pliki `users.csv` i `reviews.csv` mają braki we wszystkich kolumnach - minimum na poziomie około 20%.
-
 
