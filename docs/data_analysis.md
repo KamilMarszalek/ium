@@ -10,7 +10,7 @@ W pliku `listings.csv` znajduje się 79 atrybutów między innymi:
 - `price`: Cena oferty.
 - `room_type`: Typ pokoju (np. całe mieszkanie, prywatny pokój).
 - `amenities`: Lista udogodnień dostępnych w ofercie np. czy jest pralka.
-- liczne opisy
+- tekstowe pola opisowe np. `description`, `neighborhood_overview`.
 
 ### Dane reviews.csv
 W pliku `reviews.csv` znajduje się 6 atrybutów:
