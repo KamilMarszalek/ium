@@ -363,12 +363,22 @@ def main() -> None:
                     pdf=pdf,
                     bins=args.bins,
                 )
+        counts = (
+            bookings["long_stay"]
+            .value_counts(dropna=False)
+            .reindex([False, True], fill_value=0)
+        )
+
+        plt.figure()
         plt.pie(
-            bookings["long_stay"].value_counts(),
+            counts.values,
             labels=["Short stay", "Long stay"],
             autopct="%1.1f%%",
+            startangle=90,
         )
         plt.title("Procent rezerwacji długoterminowych (long_stay)")
+        plt.tight_layout()
+
         pie_path = out_dir / "bookings_long_stay_pie.png"
         plt.savefig(pie_path, dpi=200, bbox_inches="tight")
         pdf.savefig(bbox_inches="tight")
