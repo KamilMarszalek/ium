@@ -23,7 +23,7 @@ W pliku `reviews.csv` znajduje się 6 atrybutów:
 
 ### Dane sessions.csv
 W pliku `sessions.csv` znajduje się 7 atrybutów:
-- `action`: Typ akcji wykonanej przez użytkownika (np. wyszukiwanie, obejrzenie oferty, rezerwacja oferty).
+- `action`: Typ akcji wykonanej przez użytkownika (np. wyszukiwanie, obejrzenie oferty, rezerwacja oferty, odwołanie rezerwacji).
 - `user_id`: Identyfikator użytkownika wykonującego akcję.
 - `timestamp`: Znacznik czasu wykonania akcji.
 - `listing_id`: Identyfikator oferty, na której wykonano.
@@ -88,6 +88,10 @@ Jednak zauważyliśmy, że wiele brakujących `id` w `listings.csv` można by by
 - Bez filtrowania po `action`: pokrycie wierszy po złączeniu wzrosło do ok. 60.3%, a pokrycie unikalnych kluczy do ok. 15.8%. Natomiast dopasowanie wzrosło do ok. 81.4% rekordów z niepustym `listing_id`.
 - Dla akcji `book_listing`: pokrycie wierszy po złączeniu wzrosło do ok. 7.4%, a pokrycie unikalnych kluczy do ok. 9.4%. Dopasowanie wzrosło do ok. 9.3% rekordów z niepustym `listing_id`. Mimo poprawy, cechy ofert z `listings` nadal będą dostępne tylko dla małej części rezerwacji, więc będzie problem z trenowaniem.
 
+Następnie poczyniliśmy obserwację, że wiele rekordów w `sessions.csv` ma nieustawione atrybut `action`, mimo że posiadają daty rezerwacji i wyglądają jak rezerwacje. Dzięki temu pozyskaliśmy dodatkowe 15000 rekordów, które są rezerwacjami. Po ponownym przeanalizowaniu złączeń po naprawie `listings.csv` i uzupełnieniu `sessions.csv`:
+- Bez filtrowania po `action`: nie zmieniły się wyniki złączenia.
+- Dla akcji `book_listing` (rezerwacje): pokrycie wierszy po złączeniu wyniosło ok. 7.4%, a pokrycie unikalnych kluczy to ok. 9.5% (minimalny wzrost). Dopasowanie wyniosło ok. 9.2% rekordów z niepustym `listing_id` (minimalny spadek). Dalej cechy ofert z `listings` będą dostępne tylko dla małej części rezerwacji. Niemniej jednak dodatkowe rekordy rezerwacji mogą pomóc w trenowaniu modelu.
+
 ### Złączenie `sessions.csv` ↔ `users.csv`
 Klucz łączący to `sessions.user_id` oraz `users.id`.
 
@@ -110,7 +114,6 @@ Klucz łączący to `reviews.listing_id` oraz `listings.id`.
 ## Braki danych
 Przeanalizowaliśmy braki danych w plikach. Braki są dosyć duże:
 - Plik `listings.csv` ma braki we wszystkich kolumnach - minimum 18% w kolumnie `host_has_profile_pic`, maksimum 100% w kolumnie `calendar_updated`. Jednak dla większości kolumn braki są w przedziale od ok. 20% do 40%. Po naprawie kolumny `id` (opisanej wyżej) braki w tej kolumnie zostały zredukowane do ok. 4.6%.
-- Plik `sessions.csv` również ma braki we wszystkich kolumnach minimum ok. 20% w kolumnach `action`, `user_id`, `timestamp`,
-maksymalne braki to ok. 94% w kolumnach `booking_date`, `booking_duration`, `booking_id`. Braki w kolumnach związanych z rezerwacjami są zrozumiałe, ponieważ nie każda sesja kończy się rezerwacją. Jednak zmienną celową `long_stay` można będzie utworzyć tylko dla około 4% rekordów, gdyż braki w kolumnach `booking_date` i `booking_duration` nie występują jednocześnie.
+- Plik `sessions.csv` również ma braki we wszystkich kolumnach minimum ok. 20% w kolumnach `action`, `user_id`, `timestamp`, maksymalne braki to ok. 94% w kolumnach `booking_date`, `booking_duration`, `booking_id`. Po zastosowaniu naprawy i uzupełnienia `action` o brakujące wartości, braki w kolumnie `action` zmalały do 19%. Braki w kolumnach związanych z rezerwacjami są zrozumiałe, ponieważ nie każda sesja kończy się rezerwacją. Jednak zmienną celową `long_stay` można będzie utworzyć tylko dla około 4.7% rekordów, gdyż braki w kolumnach `booking_date` i `booking_duration` nie występują jednocześnie.
 - Pliki `users.csv` i `reviews.csv` mają braki we wszystkich kolumnach - minimum na poziomie około 20%.
 
