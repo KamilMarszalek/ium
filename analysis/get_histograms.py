@@ -17,11 +17,13 @@ LOGY_COLUMNS = {
     "number_of_reviews",
     "minimum_nights",
     "maximum_nights",
+    "minimum_minimum_nights",
 }
 
 NIGHTS_RANGES = {
     "maximum_nights",
     "minimum_nights",
+    "minimum_minimum_nights",
 }
 
 
@@ -134,6 +136,53 @@ def save_bar(
     ax.grid(True, axis="y", alpha=0.3)
     plt.xticks(rotation=45, ha="right")
 
+    fig.savefig(out_png, dpi=200, bbox_inches="tight")
+    if pdf is not None:
+        pdf.savefig(fig, bbox_inches="tight")
+    plt.close(fig)
+
+
+def save_capped_nights_bar(
+    series: pd.Series,
+    title: str,
+    xlabel: str,
+    out_png: Path,
+    pdf: PdfPages | None = None,
+    *,
+    cap: int = 14,
+    logy: bool = False,
+) -> None:
+    raw = pd.to_numeric(series, errors="coerce")
+    missing = int(raw.isna().sum())
+    s = raw.dropna()
+    if s.empty:
+        print(f"{title}: no data")
+        return
+    s = s[s > 0]
+    clipped = s.clip(upper=cap + 1).astype(int)
+    counts = clipped.value_counts().sort_index()
+    idx = list(range(1, cap + 2))
+    counts = counts.reindex(idx, fill_value=0)
+    labels = [str(i) for i in range(1, cap + 1)] + [f"{cap}+"]
+    values = counts.values
+    fig, ax = plt.subplots(figsize=(12, 5), constrained_layout=True)
+    ax.bar(range(len(values)), values)
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Liczność")
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=0)
+    if logy:
+        ax.set_yscale("log")
+    ax.grid(True, axis="y", alpha=0.3)
+    ax.text(
+        0.99,
+        0.95,
+        f"N={len(s)}  missing={missing}",
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+    )
     fig.savefig(out_png, dpi=200, bbox_inches="tight")
     if pdf is not None:
         pdf.savefig(fig, bbox_inches="tight")
@@ -262,27 +311,42 @@ def main() -> None:
                 "bathrooms",
                 "minimum_nights",
                 "maximum_nights",
+                "minimum_minimum_nights",
                 "number_of_reviews",
             ]:
-                if col in listings.columns:
-                    save_kwargs = {}
-                    if col in DISCRETE_COLUMNS:
-                        save_kwargs["discrete"] = True
-                        save_kwargs["xtick_step"] = 1
-                    if col in LOGY_COLUMNS:
-                        save_kwargs["logy"] = True
-                    if col in NIGHTS_RANGES:
-                        save_kwargs["discrete"] = True
-                        save_kwargs["logx"] = True
-                    save_hist(
+                if col not in listings.columns:
+                    continue
+
+                if col in {
+                    "minimum_nights",
+                    "maximum_nights",
+                    "minimum_minimum_nights",
+                }:
+                    save_capped_nights_bar(
                         listings[col],
-                        title=f"Rozkład {col} w listings.csv",
-                        xlabel=col,
-                        out_png=out_dir / f"listings_{col}.png",
+                        title=f"Rozkład {col} w listings.csv (1-14 oraz 14+)",
+                        xlabel=f"{col} (noclegi)",
+                        out_png=out_dir / f"listings_{col}_capped14.png",
                         pdf=pdf,
-                        bins=args.bins,
-                        **save_kwargs,
+                        cap=14,
+                        logy=False,
                     )
+                    continue
+                save_kwargs = {}
+                if col in DISCRETE_COLUMNS:
+                    save_kwargs["discrete"] = True
+                    save_kwargs["xtick_step"] = 1
+                if col in LOGY_COLUMNS:
+                    save_kwargs["logy"] = True
+                save_hist(
+                    listings[col],
+                    title=f"Rozkład {col} w listings.csv",
+                    xlabel=col,
+                    out_png=out_dir / f"listings_{col}.png",
+                    pdf=pdf,
+                    bins=args.bins,
+                    **save_kwargs,
+                )
 
         if reviews_path.exists():
             reviews = pd.read_csv(
