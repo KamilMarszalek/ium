@@ -4,6 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from booking_builder import build_bookings_from_sessions
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 
@@ -199,28 +200,6 @@ def load_sessions(path: Path) -> pd.DataFrame:
             "booking_id": "string",
         },
     )
-
-
-def build_bookings_from_sessions(sessions: pd.DataFrame) -> pd.DataFrame:
-    book = sessions[sessions["action"] == "book_listing"].copy()
-    book["checkin"] = pd.to_datetime(book.get("booking_date"), errors="coerce")
-    book["checkout"] = pd.to_datetime(
-        book.get("booking_duration"),
-        errors="coerce",
-    )
-    book["booking_ts"] = pd.to_datetime(book.get("timestamp"), errors="coerce")
-
-    book["nights"] = (book["checkout"] - book["checkin"]).dt.days
-    book = book[book["nights"].notna()]
-    book = book[(book["nights"] > 0) & (book["nights"] <= 365)]
-
-    if "booking_ts" in book.columns:
-        book["lead_time_days"] = (book["checkin"] - book["booking_ts"]).dt.days
-    book["long_stay"] = book["nights"] >= 7
-    book["checkin_quarter"] = book["checkin"].dt.to_period("Q").astype("string")
-    book["checkin_month"] = book["checkin"].dt.month
-
-    return book
 
 
 def main() -> None:
