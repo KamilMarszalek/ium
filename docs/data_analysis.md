@@ -130,9 +130,9 @@ Na podstawie na razie dostępnych danych widzimy że rozkład długości rezerwa
 ![Rozkład ile dni przed zameldowaniem jest dokonywana rezerwacja](../data/plots/bookings_lead_time_days.png)
 Widzimy, że większość rezerwacji jest dokonywana na krótko przed datą zameldowania, widzimy wyraźną dominację w przedziale do 30 dni przed zameldowaniem. Jednak istnieje również zauważalna liczba rezerwacji dokonywanych z większym wyprzedzeniem, sięgającym nawet kilkuset dni. 
 
-## Analiza rozkładu zminnej docelowej long_stay
+## Analiza rozkładu zmiennej docelowej long_stay
 ![Procent rezerwacji długoterminowych (long_stay)](../data/plots/bookings_long_stay_pie.png)
-Widzimy, że około 47.1% rezerwacji to rezerwacje długoterminowe (co najmniej 7 dni), podczas gdy 52.9% to rezerwacje krótkoterminowe (poniżej 7 dni). Oznacza to, że klasy w zmiennej docelowej `long_stay` są stosunkowo zrównoważone, co jest korzystne dla trenowania modeli predykcyjnych.
+Widzimy, że około 52.9% rezerwacji to rezerwacje długoterminowe (co najmniej 7 dni), podczas gdy 47.1% to rezerwacje krótkoterminowe (poniżej 7 dni). Oznacza to, że klasy w zmiennej docelowej `long_stay` są stosunkowo zrównoważone, co jest korzystne dla trenowania modeli predykcyjnych.
 
 ## Analiza rozkładu kwartałów zameldowania
 ![Rozkład kwartałów zameldowania](../data/plots/bookings_checkin_quarter.png)
