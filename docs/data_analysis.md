@@ -123,27 +123,27 @@ Kolumnę `booking_date` nazwiemy `checkin`, a kolumnę `booking_duration` nazwie
 Na podstawie czasu trwania rezerwacji zdefiniujemy zmienną docelową `long_stay`, która przyjmie wartość 1, jeśli czas trwania rezerwacji wyniesie co najmniej x dni, w przeciwnym razie przyjmie wartość 0. 
 
 ## Analiza rozkładu długości rezerwacji
-![Rozkład długości rezerwacji w dniach](../data/plots/bookings_nights.png)
+![Rozkład długości rezerwacji w dniach](../plots/bookings_nights.png)
 Na podstawie na razie dostępnych danych widzimy że rozkład długości rezerwacji jest stosunkowo płaski (delikatna przewaga dla wartości poniżej 7), dla każdej z wartości od 1 do 14. Dlatego proponujemy ustawić próg x na 7 dni, co pozwoli nam zrównoważyć klasy w zmiennej docelowej `long_stay`. Ostateczna wartość progu może być dostosowana na podstawie dalszej analizy rozkładu długości rezerwacji i wymagań biznesowych.
 
 ## Analiza rozkładu ile dni przed zameldowaniem jest dokonywana rezerwacja
-![Rozkład ile dni przed zameldowaniem jest dokonywana rezerwacja](../data/plots/bookings_lead_time_days.png)
+![Rozkład ile dni przed zameldowaniem jest dokonywana rezerwacja](../plots/bookings_lead_time_days.png)
 Widzimy, że większość rezerwacji jest dokonywana na krótko przed datą zameldowania, widzimy wyraźną dominację w przedziale do 30 dni przed zameldowaniem. Jednak istnieje również zauważalna liczba rezerwacji dokonywanych z większym wyprzedzeniem, sięgającym nawet kilkuset dni. 
 
 ## Analiza rozkładu zmiennej docelowej long_stay
-![Procent rezerwacji długoterminowych (long_stay)](../data/plots/bookings_long_stay_pie.png)
+![Procent rezerwacji długoterminowych (long_stay)](../plots/bookings_long_stay_pie.png)
 Widzimy, że około 52.9% rezerwacji to rezerwacje długoterminowe (co najmniej 7 dni), podczas gdy 47.1% to rezerwacje krótkoterminowe (poniżej 7 dni). Oznacza to, że klasy w zmiennej docelowej `long_stay` są stosunkowo zrównoważone, co jest korzystne dla trenowania modeli predykcyjnych.
 
 ## Analiza rozkładu kwartałów zameldowania
-![Rozkład kwartałów zameldowania](../data/plots/bookings_checkin_quarter.png)
+![Rozkład kwartałów zameldowania](../plots/bookings_checkin_quarter.png)
 Widzimy, że pierwsze rezerwacje zaczynają się w drugim kwartale 2011 roku, następnie widzimy dość stabilny wzrost liczby rezerwacji aż do końca 2019 roku. W 2020 roku widzimy spadek liczby rezerwacji, co jest zgodne z globalnym trendem związanym z pandemią COVID-19. Po 2020 roku widzimy ponowny wzrost liczby rezerwacji, co sugeruje powrót do normalności w branży turystycznej. Wzrost ostro przyspiesza aż do ostatniego kwartału 2024 roku. Następnie mamy niski słupek w pierwszym kwartale 2025 roku, co może być związane z brakiem danych za ten okres.
 
 ## Analiza rozkładu kwartałów z jakich pochodzą oferty
-![Rozkład kwartałów z jakich pochodzą oferty](../data/plots/listings_last_scraped.png)
+![Rozkład kwartałów z jakich pochodzą oferty](../plots/listings_last_scraped.png)
 Widzimy, że oferty w naszym zestawie danych pochodzą tylko z pierwszego kwartału 2025 roku. Jest to duży problem, bo nie mamy wiedzy o tym, jak oferty wyglądały w przeszłości. Standard obiektów mógł się zmieniać w czasie, podobnie jak ceny i dostępność. To w zasadzie wyklucza użycie cech z `listings.csv` do trenowania modelu predykcyjnego dla naszego problemu.
 
 ## Analiza rozkładu minimalnej liczby nocy rezerwacji
-![Rozkład minimalnej liczby nocy rezerwacji](../data/plots/listings_minimum_nights_capped14.png)
+![Rozkład minimalnej liczby nocy rezerwacji](../plots/listings_minimum_nights_capped14.png)
 Widzimy, że większość ofert ma minimalną liczbę nocy ustawioną na 1, co oznacza, że można dokonać rezerwacji na jedną noc. Jednak istnieje również zauważalna liczba ofert z wyższymi minimalnymi wymaganiami, sięgającymi do 14 nocy i więcej. Potencjalnym problemem jest to, że w naszych danych nie ma żadnych rezerwacji dłuższych niż 14 nocy, więc te oferty wogóle nie są reprezentowane w danych rezerwacji.
 
 
