@@ -84,6 +84,10 @@ Dla `listings.csv` i `sessions.csv` kluczami są odpowiednio `listings.id` oraz 
 
 - Dla akcji `book_listing` (rezerwacje): ok. 80% rekordów ma niepusty `listing_id`, jednak tylko ok. 7.7% z nich znajduje dopasowanie w `listings.csv` (łączny row coverage ~6.2%). Oznacza to, że cechy ofert z `listings.csv` będą dostępne tylko dla niewielkiej części rezerwacji; trening modelu oparty głównie o cechy ofert może być przez to niemożliwy lub silnie obciążony selekcją danych.
 
+Jednak zauważyliśmy, że wiele brakujących `id` w `listings.csv` można by było odzyskać, analizując kolumnę `listing_url` i wyciągając z niej identyfikatory ofert. Po naprawie braków w `listings.csv`, ponowiliśmy analizę złączeń:
+- Bez filtrowania po `action`: pokrycie wierszy po złączeniu wzrosło do ok. 60.3%, a pokrycie unikalnych kluczy do ok. 15.8%. Natomiast dopasowanie wzrosło do ok. 81.4% rekordów z niepustym `listing_id`.
+- Dla akcji `book_listing`: pokrycie wierszy po złączeniu wzrosło do ok. 7.4%, a pokrycie unikalnych kluczy do ok. 9.4%. Dopasowanie wzrosło do ok. 9.3% rekordów z niepustym `listing_id`. Mimo poprawy, cechy ofert z `listings` nadal będą dostępne tylko dla małej części rezerwacji, więc będzie problem z trenowaniem.
+
 ### Złączenie `sessions.csv` ↔ `users.csv`
 Klucz łączący to `sessions.user_id` oraz `users.id`.
 
