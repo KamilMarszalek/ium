@@ -18,16 +18,15 @@ To utrudnia pracę konsultantom - nie mogą skutecznie doradzać właścicielom,
 
 ### 2.1 Co modelujemy
 
-- Zmienna wyjściowa *y*: 
+- Zmienna wyjściowa *y*:
   - `1` – rezerwacja „Długa”,  
   - `0` – rezerwacja „Krótka”.
 - Robocza definicja długiej rezerwacji: pobyt np. powyżej 7 dni
-- Wymaga potwierdzenia: Czy próg 7 dni jest odpowiedni?
 
 - Rodzaj zadania: klasyfikacja binarna.
 
-
 ### 2.2 Wybór modelu
+
 Potrzebujemy modelu interpretowalnego, który pozwoli zrozumieć, które cechy są najważniejsze.
 
 Rozważane algorytmy:
@@ -35,65 +34,50 @@ Rozważane algorytmy:
 - Regresja logistyczna
 - Drzewa decyzyjne (Gradient Boosting)
 
-
 Oba umożliwiają łatwe wyodrębnienie wag cech.
 
 ### 2.3 Kryteria sukcesu
 
-Możliwość wygenerowania raportu "TOP 5 cech" wpływających na długość pobytu
+#### 2.3.1 Kryterium biznesowe
 
-## 3. Analiza dostępnych danych
+**Cel biznesowy:** Dostarczenie konsultantom konkretnych, wdrożeniowych rekomendacji dla właścicieli nieruchomości co pozwoli zwiększyć liczbę długich rezerwacji o 15%.
 
-Na podstawie opisu projektu wiemy, że serwis Nocarz zbiera następujące rodzaje danych:
+**Mierniki sukcesu biznesowego:**
 
-- szczegółowe dane o lokalach,
-- recenzje lokali,
-- kalendarz z dostępnością i cenami,
-- baza klientów i sesji.
+- Model identyfikuje minimum 3-5 kluczowych cech, które właściciele mogą zmodyfikować (np. dodanie Wi-Fi, wyposażonej kuchni)
+- Rekomendacje są zrozumiałe dla konsultantów bez technicznego background'u
 
-**Dane, które chcielibyśmy wykorzystać**
+#### 2.3.2 Kryterium analityczne
 
-- Baza klientów/sesji - potencjalnie:
-  - kraj/region użytkownika,
-  - liczba wcześniejszych rezerwacji,
-  - częstotliwość korzystania z serwisu,
-  - historia przeglądania ofert
- 
-  Przykład interpretacji:
-  - Klient, który przegląda oferty z dużym wyprzedzeniem i w środku tygodnia, może planować dłuższy wyjazd (np. praca zdalna).
-  - Klient, który często wraca do jednego regionu, może preferować dłuższe pobyty w znanym miejscu.
+**Metryki:**
+Ze względu na potencjalnie niezbalansowane dane (długie rezerwacje mogą być rzadsze), używamy metryk odpornych na dysproporcje klas:
 
-- Dane kalendarzowe
-  - daty rezerwacji,
-  - długość pobytu,
-  - historia cen dla danej oferty,
-  - sezonowość:
-    - miesiąc, dzień tygodnia,
-    - okresy specjalne (wakacje, ferie, święta).
+- **ROC AUC** - główna metryka
+- **PR AUC** - metryka uzupełniająca, szczególnie ważna przy silnie niezbalansowanych danych, gdzie ROC AUC może dawać fałszywie optymistyczne wyniki
 
-- Dane o lokalach
-  - typ obiektu: mieszkanie, dom, pokój, apartament,
-  - lokalizacja: miasto, region, odległość od centrum/atrakcji,
-  - maksymalna liczba osób, liczba pokoi,
-  - cechy standardu i wyposażenia.
+**Model bazowy do porównania:**
 
-- Recenzje lokali
-  - średnia ocena,
-  - liczba recenzji
+**Model większościowy** - zawsze przewiduje klasę większościową (najprawdopodobniej "krótka rezerwacja"). Taki model osiąga ROC AUC ok. 0.5 (równoważne losowemu zgadywaniu).
 
+**Cel analityczny:**
 
-**Luki w danych i potrzebne uzupełnienia**
+Model musi spełniać następujące kryteria:
 
-Brak lub nieustrukturyzowane dane o wyposażeniu
+- **Przewidywalność:** Wykazać, że długość rezerwacji jest w ogóle przewidywalna na podstawie dostępnych danych
+- **Praktyczna użyteczność:** Osiągnąć **ROC AUC > 0.7**, co oznacza wyraźną poprawę względem modelu bazowego (0.5) i wskazuje na realną wartość predykcyjną
+- **Interpretowalność:** Umożliwić identyfikację najważniejszych cech z jasną interpretacją ich wpływu
 
-   - Potrzebujemy dobrze zdefiniowanych, ustrukturyzowanych flag binarnych typu:
-     - `has_fast_wifi`,
-     - `has_kitchen`,
-     - `has_washing_machine`,
-     - `has_workspace`,
-     - `is_kid_friendly` ,
-     - `has_free_parking` 
+**Proces ustalania progów:**
 
+1. **Analiza danych:**
+   - Zbadanie rozkładu klas (% długich vs. krótkich rezerwacji)
+   - Ocena jakości i kompletności danych
 
+2. **Wstępne modelowanie:**
+   - Zbudowanie prostego modelu
+   - Ustalenie baseline'u dla ROC AUC
+   - Ocena czy problem jest w ogóle przewidywalny
 
-
+3. **Ustalenie progów:**
+   - Na podstawie baseline'u określenie realistycznego celu
+   - Walidacja czy osiągnięta skuteczność przekłada się na wartość biznesową (czy zidentyfikowane czynniki są modyfikowalne przez właścicieli)
