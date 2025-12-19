@@ -139,6 +139,7 @@ def build_bookings_from_sessions(sessions: pd.DataFrame) -> pd.DataFrame:
 
     if "booking_ts" in book.columns:
         book["lead_time_days"] = (book["checkin"] - book["booking_ts"]).dt.days
+    book["long_stay"] = book["nights"] >= 7
 
     return book
 
@@ -250,7 +251,16 @@ def main() -> None:
                     pdf=pdf,
                     bins=args.bins,
                 )
-
+        plt.pie(
+            bookings["long_stay"].value_counts(),
+            labels=["Short stay", "Long stay"],
+            autopct="%1.1f%%",
+        )
+        plt.title("Procent rezerwacji długoterminowych (long_stay)")
+        pie_path = out_dir / "bookings_long_stay_pie.png"
+        plt.savefig(pie_path, dpi=200, bbox_inches="tight")
+        pdf.savefig(bbox_inches="tight")
+        plt.close()
     print(f"saved PNGs + {pdf_path}")
 
 
