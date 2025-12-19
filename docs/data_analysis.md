@@ -117,3 +117,21 @@ Przeanalizowaliśmy braki danych w plikach. Braki są dosyć duże:
 - Plik `sessions.csv` również ma braki we wszystkich kolumnach minimum ok. 20% w kolumnach `action`, `user_id`, `timestamp`, maksymalne braki to ok. 94% w kolumnach `booking_date`, `booking_duration`, `booking_id`. Po zastosowaniu naprawy i uzupełnienia `action` o brakujące wartości, braki w kolumnie `action` zmalały do 19%. Braki w kolumnach związanych z rezerwacjami są zrozumiałe, ponieważ nie każda sesja kończy się rezerwacją. Jednak zmienną celową `long_stay` można będzie utworzyć tylko dla około 4.7% rekordów, gdyż braki w kolumnach `booking_date` i `booking_duration` nie występują jednocześnie.
 - Pliki `users.csv` i `reviews.csv` mają braki we wszystkich kolumnach - minimum na poziomie około 20%.
 
+## Definicja targetu
+Na potrzeby naszego problemu zbudujemy dataset `reservations.csv`, który będzie zawierał tylko rekordy z `sessions.csv`, które reprezentują rezerwacje (czyli mają uzupełnione kolumny `booking_date` i `booking_duration`).
+Kolumnę `booking_date` nazwiemy `checkin`, a kolumnę `booking_duration` nazwiemy `checkout`. Następnie na ich podstawie zostanie wyliczony czas trwania rezerwacji w dniach jako różnica między `checkout` a `checkin`. Stworzymy nową kolumnę `lead_time_days`, która będzie reprezentować liczbę dni między datą dokonania rezerwacji a datą zameldowania (różnica między `checkin` a datą wyciągniętą z `timestamp`).
+Na podstawie czasu trwania rezerwacji zdefiniujemy zmienną docelową `long_stay`, która przyjmie wartość 1, jeśli czas trwania rezerwacji wyniesie co najmniej x dni, w przeciwnym razie przyjmie wartość 0. 
+
+## Analiza rozkładu długości rezerwacji
+![Rozkład długości rezerwacji w dniach](../data/plots/bookings_nights.png)
+Na podstawie na razie dostępnych danych widzimy że rozkład długości rezerwacji jest mniej więcej równomierny (delikatna przewaga dla wartości poniżej 7), dla każdej z wartości od 1 do 14. Dlatego proponujemy ustawić próg x na 7 dni, co pozwoli nam zrównoważyć klasy w zmiennej docelowej `long_stay`. Ostateczna wartość progu może być dostosowana na podstawie dalszej analizy rozkładu długości rezerwacji i wymagań biznesowych.
+
+## Analiza rozkładu ile dni przed zameldowaniem jest dokonywana rezerwacja
+![Rozkład ile dni przed zameldowaniem jest dokonywana rezerwacja](../data/plots/bookings_lead_time_days.png)
+Widzimy, że większość rezerwacji jest dokonywana na krótko przed datą zameldowania, widzimy wyraźną dominację w przedziale do 30 dni przed zameldowaniem. Jednak istnieje również zauważalna liczba rezerwacji dokonywanych z większym wyprzedzeniem, sięgającym nawet kilkuset dni. 
+
+## Analiza rozkładu zminnej docelowej long_stay
+![Procent rezerwacji długoterminowych (long_stay)](../data/plots/bookings_long_stay_pie.png)
+Widzimy, że około 47.1% rezerwacji to rezerwacje długoterminowe (co najmniej 7 dni), podczas gdy 52.9% to rezerwacje krótkoterminowe (poniżej 7 dni). Oznacza to, że klasy w zmiennej docelowej `long_stay` są stosunkowo zrównoważone, co jest korzystne dla trenowania modeli predykcyjnych.
+
+
