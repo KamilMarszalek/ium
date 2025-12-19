@@ -112,6 +112,34 @@ def save_hist(
     plt.close(fig)
 
 
+def save_bar(
+    series: pd.Series,
+    title: str,
+    xlabel: str,
+    out_png: Path,
+    pdf: PdfPages | None = None,
+    fig_width: float = 12,
+) -> None:
+    counts = series.value_counts().sort_index()
+    if counts.empty:
+        print(f"{title}: no data")
+        return
+
+    fig, ax = plt.subplots(figsize=(fig_width, 5), constrained_layout=True)
+    counts.plot(kind="bar", ax=ax)
+
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Liczność")
+    ax.grid(True, axis="y", alpha=0.3)
+    plt.xticks(rotation=45, ha="right")
+
+    fig.savefig(out_png, dpi=200, bbox_inches="tight")
+    if pdf is not None:
+        pdf.savefig(fig, bbox_inches="tight")
+    plt.close(fig)
+
+
 def load_sessions(path: Path) -> pd.DataFrame:
     return pd.read_csv(
         path,
@@ -140,6 +168,8 @@ def build_bookings_from_sessions(sessions: pd.DataFrame) -> pd.DataFrame:
     if "booking_ts" in book.columns:
         book["lead_time_days"] = (book["checkin"] - book["booking_ts"]).dt.days
     book["long_stay"] = book["nights"] >= 7
+    book["checkin_quarter"] = book["checkin"].dt.to_period("Q").astype("string")
+    book["checkin_month"] = book["checkin"].dt.month
 
     return book
 
@@ -173,6 +203,13 @@ def main() -> None:
             discrete=True,
             xtick_step=1,
         )
+        save_bar(
+            bookings["checkin_quarter"],
+            title="Rozkład kwartałów zameldowania",
+            xlabel="Kwartał zameldowania",
+            out_png=out_dir / "bookings_checkin_quarter.png",
+            pdf=pdf,
+        )
 
         if "lead_time_days" in bookings.columns:
             save_hist(
@@ -205,6 +242,17 @@ def main() -> None:
                     out_png=out_dir / "listings_price_log10.png",
                     pdf=pdf,
                     bins=args.bins,
+                )
+            if "last_scraped" in listings.columns:
+                save_bar(
+                    pd.to_datetime(listings["last_scraped"], errors="coerce")
+                    .dt.to_period("Q")
+                    .astype("string"),
+                    title="Rozkład kwartałów last_scraped w listings.csv",
+                    xlabel="Kwartał ostatniego skrobania",
+                    out_png=out_dir / "listings_last_scraped.png",
+                    pdf=pdf,
+                    fig_width=5,
                 )
 
             for col in [
@@ -261,6 +309,7 @@ def main() -> None:
         plt.savefig(pie_path, dpi=200, bbox_inches="tight")
         pdf.savefig(bbox_inches="tight")
         plt.close()
+
     print(f"saved PNGs + {pdf_path}")
 
 
