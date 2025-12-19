@@ -25,8 +25,24 @@ for c in ["user_city", "checkin_month"]:
 pd.set_option("future.no_silent_downcasting", True)
 X = X.replace({pd.NA: np.nan}).infer_objects(copy=False)
 
-num_cols = [c for c in ["lead_time_days"] if c in X.columns]
-cat_cols = [c for c in ["user_city", "checkin_month"] if c in X.columns]
+num_cols = [
+    c for c in ["lead_time_days", "lead_time_log1p", "checkin_year"] if c in X.columns
+]
+cat_cols = [
+    c
+    for c in [
+        "user_city",
+        "postal_prefix2",
+        "checkin_month",
+        "checkin_dow",
+        "checkin_is_weekend",
+        "booking_month",
+        "booking_dow",
+        "booking_hour",
+        "lead_time_bucket",
+    ]
+    if c in X.columns
+]
 
 preprocess = ColumnTransformer(
     transformers=[
@@ -73,7 +89,7 @@ X_train, X_test, y_train, y_test = run_split(X, y, groups=groups)
 
 models = {
     "dummy_most_frequent": DummyClassifier(strategy="most_frequent"),
-    "logreg": LogisticRegression(max_iter=2000),
+    "logreg": LogisticRegression(max_iter=10000),
 }
 
 for name, clf in models.items():
