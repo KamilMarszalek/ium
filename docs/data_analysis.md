@@ -109,7 +109,7 @@ Klucz łączący to `reviews.listing_id` oraz `listings.id`.
 
 ## Braki danych
 Przeanalizowaliśmy braki danych w plikach. Braki są dosyć duże:
-- Plik `listings.csv` ma braki we wszystkich kolumnach - minimum 18% w kolumnie `host_has_profile_pic`, maksimum 100% w kolumnie `calendar_updated`. Jednak dla większości kolumn braki są w przedziale od ok. 20% do 40%.
+- Plik `listings.csv` ma braki we wszystkich kolumnach - minimum 18% w kolumnie `host_has_profile_pic`, maksimum 100% w kolumnie `calendar_updated`. Jednak dla większości kolumn braki są w przedziale od ok. 20% do 40%. Po naprawie kolumny `id` (opisanej wyżej) braki w tej kolumnie zostały zredukowane do ok. 4.6%.
 - Plik `sessions.csv` również ma braki we wszystkich kolumnach minimum ok. 20% w kolumnach `action`, `user_id`, `timestamp`,
 maksymalne braki to ok. 94% w kolumnach `booking_date`, `booking_duration`, `booking_id`. Braki w kolumnach związanych z rezerwacjami są zrozumiałe, ponieważ nie każda sesja kończy się rezerwacją. Jednak zmienną celową `long_stay` można będzie utworzyć tylko dla około 4% rekordów, gdyż braki w kolumnach `booking_date` i `booking_duration` nie występują jednocześnie.
 - Pliki `users.csv` i `reviews.csv` mają braki we wszystkich kolumnach - minimum na poziomie około 20%.
