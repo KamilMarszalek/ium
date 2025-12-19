@@ -154,8 +154,8 @@ def main() -> None:
     out_dir: Path = args.out_dir
     ensure_dir(out_dir)
 
-    sessions_path = data_dir / "sessions.csv"
-    listings_path = data_dir / "listings.csv"
+    sessions_path = data_dir / "sessions_repaired.csv"
+    listings_path = data_dir / "listings_repaired.csv"
     reviews_path = data_dir / "reviews.csv"
 
     sessions = load_sessions(sessions_path)
