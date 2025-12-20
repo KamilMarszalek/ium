@@ -55,7 +55,7 @@ Ze względu na potencjalnie niezbalansowane dane (długie rezerwacje mogą być 
 - **ROC AUC** - główna metryka
 - **PR AUC** - metryka uzupełniająca, szczególnie ważna przy silnie niezbalansowanych danych, gdzie ROC AUC może dawać fałszywie optymistyczne wyniki
 
-**Model bazowy do porównania:**
+**Model bazowy do porównania:** (Opracowane modele zostały opisane niżej po analizie danych)
 
 **Model większościowy** - zawsze przewiduje klasę większościową (najprawdopodobniej "krótka rezerwacja"). Taki model osiąga ROC AUC ok. 0.5 (równoważne losowemu zgadywaniu).
 
@@ -81,39 +81,6 @@ Model musi spełniać następujące kryteria:
 3. **Ustalenie progów:**
    - Na podstawie baseline'u określenie realistycznego celu
    - Walidacja czy osiągnięta skuteczność przekłada się na wartość biznesową (czy zidentyfikowane czynniki są modyfikowalne przez właścicieli)
-
-Stworzyliśmy dwa proste modele bazowe do przewidywania zmiennej docelowej `long_stay`:
-
-1. Model zwracający zawsze 1 (długoterminowa rezerwacja). Osiągnął on 52.9% dokładności, co jest zgodne z rozkładem klas w danych. Natomiast wartość ROC AUC wyniosła 0.5, co oznacza brak zdolności rozróżniania między klasami.
-2. Model oparty na regresji logistycznej wykorzystujący cechy wyłuskane tylko z pliku `sessions.csv` i `users.csv`, bez cech z `listings.csv` ze względu na problemy z aktualnością danych i złączeniami. Cechy użyte w modelu regresji logistycznej to:
-    - `lead_time_days`: liczba dni między datą dokonania rezerwacji a datą zameldowania, wyliczona jako różnica między `checkin` a datą wyciągniętą z `time stamp`.
-    - `checkin_month`: miesiąc zameldowania wyciągnięty z daty `checkin`.
-    - `checkin_year`: rok zameldowania wyciągnięty z daty `checkin`.
-    - `checkin_dow`: dzień tygodnia zameldowania wyciągnięty z daty `checkin`.
-    - `checkin_is_weekend`: czy data zameldowania przypada na weekend (sobota lub niedziela).
-    - `user_city`: miasto użytkownika wyciągnięte z pliku `users.csv`.
-    - `booking_month`: miesiąc dokonania rezerwacji wyciągnięty z daty w `timestamp`.
-    - `booking_dow`: dzień tygodnia dokonania rezerwacji wyciągnięty z daty w `timestamp`.
-    - `booking_hour`: godzina dokonania rezerwacji wyciągnięta z daty w `timestamp`.
-    - `lead_time_bucket`: kategoryzacja `lead_time_days` na przedziały (1,2-3,4-7,8-14,15-30,31-90,91+).
-    - `city_missing`: czy miasto użytkownika jest brakujące w danych.
-Model regresji logistycznej osiągnął dokładność około 51.6% oraz wartość ROC AUC około 0.505 na zbiorze testowym. Wyniki te są nieco lepsze niż model bazowy zwracający zawsze 1, ale nadal wskazują na ograniczoną zdolność rozróżniania między klasami.
-
-| feature | pearson_corr | spearman_corr | mutual_info | cramers_v | chi2_p |
-|---|---:|---:|---:|---:|---:|
-| user_city | — | — | 0.005817 | 0.020729 | 9.69e-01 |
-| checkin_year | -0.008249 | -0.012210 | 0.000397 | 0.028183 | 7.66e-08 |
-| lead_time_bucket | — | — | 0.000380 | 0.027508 | 1.07e-09 |
-| booking_hour | 0.001695 | 0.001692 | 0.000119 | 0.015417 | 7.90e-01 |
-| checkin_month | -0.002166 | -0.002148 | 0.000066 | 0.011485 | 5.18e-01 |
-| checkin_dow | 0.005197 | 0.005178 | 0.000061 | 0.011075 | 1.51e-01 |
-| booking_dow | 0.003383 | 0.003405 | 0.000056 | 0.010622 | 2.77e-01 |
-| booking_month | -0.001477 | -0.001466 | 0.000047 | 0.009668 | 8.45e-01 |
-| checkin_is_weekend | 0.005203 | 0.005203 | 0.000014 | 0.005174 | 1.51e-01 |
-| city_missing | 0.001506 | 0.001506 | 0.000001 | 0.001480 | 6.81e-01 |
-| lead_time_days | -0.006086 | -0.000548 | 0.000000 | — | — |
-
-W powyższej tabeli przedstawiono różne miary statystyczne oceniające związek między cechami a zmienną docelową `long_stay`. Wartości pearsona i spearmana są bardzo niskie dla wszystkich cech, co wskazuje na słabą liniową i monotoniczną zależność. Miary informacji wzajemnej również są bardzo niskie, co sugeruje, że cechy te dostarczają niewiele informacji o zmiennej docelowej. Wartości Cramér's V i p-wartości z testu chi-kwadrat również wskazują na brak istotnych zależności między cechami a `long_stay`. Ogólnie rzecz biorąc, wyniki te sugerują, że dostępne cechy mają ograniczoną zdolność predykcyjną dla naszego problemu.
 
 ## 3. Analiza danych
 
@@ -290,6 +257,41 @@ Widzimy, że oferty w naszym zestawie danych pochodzą tylko z pierwszego kwarta
 ![Rozkład minimalnej liczby nocy rezerwacji](../plots/listings_minimum_nights_capped14.png)
 Widzimy, że większość ofert ma minimalną liczbę nocy ustawioną na 1, co oznacza, że można dokonać rezerwacji na jedną noc. Jednak istnieje również zauważalna liczba ofert z wyższymi minimalnymi wymaganiami, sięgającymi do 14 nocy i więcej. Potencjalnym problemem jest to, że w naszych danych nie ma żadnych rezerwacji dłuższych niż 14 nocy, więc te oferty wogóle nie są reprezentowane w danych rezerwacji.
 
-### 3.7 Podsumowanie
+### 3.7 Model baseline
+
+Stworzyliśmy dwa proste modele bazowe do przewidywania zmiennej docelowej `long_stay`:
+
+1. Model zwracający zawsze 1 (długoterminowa rezerwacja). Osiągnął on 52.9% dokładności, co jest zgodne z rozkładem klas w danych. Natomiast wartość ROC AUC wyniosła 0.5, co oznacza brak zdolności rozróżniania między klasami.
+2. Model oparty na regresji logistycznej wykorzystujący cechy wyłuskane tylko z pliku `sessions.csv` i `users.csv`, bez cech z `listings.csv` ze względu na problemy z aktualnością danych i złączeniami. Cechy użyte w modelu regresji logistycznej to:
+    - `lead_time_days`: liczba dni między datą dokonania rezerwacji a datą zameldowania, wyliczona jako różnica między `checkin` a datą wyciągniętą z `time stamp`.
+    - `checkin_month`: miesiąc zameldowania wyciągnięty z daty `checkin`.
+    - `checkin_year`: rok zameldowania wyciągnięty z daty `checkin`.
+    - `checkin_dow`: dzień tygodnia zameldowania wyciągnięty z daty `checkin`.
+    - `checkin_is_weekend`: czy data zameldowania przypada na weekend (sobota lub niedziela).
+    - `user_city`: miasto użytkownika wyciągnięte z pliku `users.csv`.
+    - `booking_month`: miesiąc dokonania rezerwacji wyciągnięty z daty w `timestamp`.
+    - `booking_dow`: dzień tygodnia dokonania rezerwacji wyciągnięty z daty w `timestamp`.
+    - `booking_hour`: godzina dokonania rezerwacji wyciągnięta z daty w `timestamp`.
+    - `lead_time_bucket`: kategoryzacja `lead_time_days` na przedziały (1,2-3,4-7,8-14,15-30,31-90,91+).
+    - `city_missing`: czy miasto użytkownika jest brakujące w danych.
+Model regresji logistycznej osiągnął dokładność około 51.6% oraz wartość ROC AUC około 0.505 na zbiorze testowym. Wyniki te są nieco lepsze niż model bazowy zwracający zawsze 1, ale nadal wskazują na ograniczoną zdolność rozróżniania między klasami.
+
+| feature | pearson_corr | spearman_corr | mutual_info | cramers_v | chi2_p |
+|---|---:|---:|---:|---:|---:|
+| user_city | — | — | 0.005817 | 0.020729 | 9.69e-01 |
+| checkin_year | -0.008249 | -0.012210 | 0.000397 | 0.028183 | 7.66e-08 |
+| lead_time_bucket | — | — | 0.000380 | 0.027508 | 1.07e-09 |
+| booking_hour | 0.001695 | 0.001692 | 0.000119 | 0.015417 | 7.90e-01 |
+| checkin_month | -0.002166 | -0.002148 | 0.000066 | 0.011485 | 5.18e-01 |
+| checkin_dow | 0.005197 | 0.005178 | 0.000061 | 0.011075 | 1.51e-01 |
+| booking_dow | 0.003383 | 0.003405 | 0.000056 | 0.010622 | 2.77e-01 |
+| booking_month | -0.001477 | -0.001466 | 0.000047 | 0.009668 | 8.45e-01 |
+| checkin_is_weekend | 0.005203 | 0.005203 | 0.000014 | 0.005174 | 1.51e-01 |
+| city_missing | 0.001506 | 0.001506 | 0.000001 | 0.001480 | 6.81e-01 |
+| lead_time_days | -0.006086 | -0.000548 | 0.000000 | — | — |
+
+W powyższej tabeli przedstawiono różne miary statystyczne oceniające związek między cechami a zmienną docelową `long_stay`. Wartości pearsona i spearmana są bardzo niskie dla wszystkich cech, co wskazuje na słabą liniową i monotoniczną zależność. Miary informacji wzajemnej również są bardzo niskie, co sugeruje, że cechy te dostarczają niewiele informacji o zmiennej docelowej. Wartości Cramér's V i p-wartości z testu chi-kwadrat również wskazują na brak istotnych zależności między cechami a `long_stay`. Ogólnie rzecz biorąc, wyniki te sugerują, że dostępne cechy mają ograniczoną zdolność predykcyjną dla naszego problemu.
+
+### 3.8 Podsumowanie
 
 Spróbowaliśmy zbudować modele bazowe do przewidywania długoterminowych rezerwacji na podstawie tych danych które nie były wybrakowane oraz dały się połączyć na podstawie pary kluczy identyfikujących. Modele te osiągnęły jedynie nieznacznie lepsze wyniki niż proste modele bazowe, co wskazuje na ograniczoną zdolność predykcyjną dostępnych cech. Głównym wyzwaniem jest brak historycznych danych ofert w `listings.csv`, co uniemożliwia wykorzystanie potencjalnie istotnych cech ofert do trenowania modeli. Również problemem jest brak możliwości złączenia wszystkich rezerwacji z cechami ofert ze względu na niezgadzające się identyfikatory. Aby poprawić wyniki, konieczne może być pozyskanie bardziej kompletnych danych historycznych ofert oraz lepsze złączenie danych między plikami. Przydatne mogłyby się też okazać dane dotyczące konkretnych rezerwacji, skąd moglibyśmy pozyskać ceny rezerwacji i inne cechy.
