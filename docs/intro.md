@@ -3,7 +3,7 @@ title: "Dokumentacja wstępna: Analiza długich rezerwacji (zadanie 7)"
 author:
   - "Damian D'Souza"
   - "Kamil Marszałek"
-date: "2025-11-27"
+date: "2025-12-20"
 ---
 
 ## 1. Definicja problemu
