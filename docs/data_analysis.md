@@ -120,7 +120,7 @@ Przeanalizowaliśmy braki danych w plikach. Braki są dosyć duże:
 ## Definicja targetu
 Na potrzeby naszego problemu zbudujemy dataset `reservations.csv`, który będzie zawierał tylko rekordy z `sessions.csv`, które reprezentują rezerwacje (czyli mają uzupełnione kolumny `booking_date` i `booking_duration`).
 Kolumnę `booking_date` nazwiemy `checkin`, a kolumnę `booking_duration` nazwiemy `checkout`. Następnie na ich podstawie zostanie wyliczony czas trwania rezerwacji w dniach jako różnica między `checkout` a `checkin`. Stworzymy nową kolumnę `lead_time_days`, która będzie reprezentować liczbę dni między datą dokonania rezerwacji a datą zameldowania (różnica między `checkin` a datą wyciągniętą z `timestamp`).
-Na podstawie czasu trwania rezerwacji zdefiniujemy zmienną docelową `long_stay`, która przyjmie wartość 1, jeśli czas trwania rezerwacji wyniesie co najmniej x dni, w przeciwnym razie przyjmie wartość 0. 
+Na podstawie czasu trwania rezerwacji zdefiniujemy zmienną docelową `long_stay`, która przyjmie wartość 1, jeśli czas trwania rezerwacji wyniesie co najmniej x dni, w przeciwnym razie przyjmie wartość 0. Docelowo jeśli uda się uzyskać lepsze dane, można będzie rozważyć użycie atrybutów dających większy sygnał do przewidywania długich pobytów.
 
 ## Analiza rozkładu długości rezerwacji
 ![Rozkład długości rezerwacji w dniach](../plots/bookings_nights.png)
@@ -145,6 +145,24 @@ Widzimy, że oferty w naszym zestawie danych pochodzą tylko z pierwszego kwarta
 ## Analiza rozkładu minimalnej liczby nocy rezerwacji
 ![Rozkład minimalnej liczby nocy rezerwacji](../plots/listings_minimum_nights_capped14.png)
 Widzimy, że większość ofert ma minimalną liczbę nocy ustawioną na 1, co oznacza, że można dokonać rezerwacji na jedną noc. Jednak istnieje również zauważalna liczba ofert z wyższymi minimalnymi wymaganiami, sięgającymi do 14 nocy i więcej. Potencjalnym problemem jest to, że w naszych danych nie ma żadnych rezerwacji dłuższych niż 14 nocy, więc te oferty wogóle nie są reprezentowane w danych rezerwacji.
+
+## Model baseline
+Stworzyliśmy dwa proste modele bazowe do przewidywania zmiennej docelowej `long_stay`:
+1. Model zwracający zawsze 1 (długoterminowa rezerwacja). Osiągnął on 52.9% dokładności, co jest zgodne z rozkładem klas w danych. Natomiast wartość ROC AUC wyniosła 0.5, co oznacza brak zdolności rozróżniania między klasami.
+2. Model oparty na regresji logistycznej wykorzystujący cechy wyłuskane tylko z pliku `sessions.csv` i `users.csv`, bez cech z `listings.csv` ze względu na problemy z danymi historycznymi. Cechy użyte w modelu regresji logistycznej to:
+    - `lead_time_days`: liczba dni między datą dokonania rezerwacji a datą zameldowania, wyliczona jako różnica między `checkin` a datą wyciągniętą z `time stamp`. 
+    - `checkin_month`: miesiąc zameldowania wyciągnięty z daty `checkin`.
+    - `checkin_year`: rok zameldowania wyciągnięty z daty `checkin`.
+    - `checkin_dow`: dzień tygodnia zameldowania wyciągnięty z daty `checkin`.
+    - `checkin_is_weekend`: czy data zameldowania przypada na weekend (sobota lub niedziela).
+    - `user_city`: miasto użytkownika wyciągnięte z pliku `users.csv`.
+    - `booking_month`: miesiąc dokonania rezerwacji wyciągnięty z daty w `timestamp`.
+    - `booking_dow`: dzień tygodnia dokonania rezerwacji wyciągnięty z daty w `timestamp`.
+    - `booking_hour`: godzina dokonania rezerwacji wyciągnięta z daty w `timestamp`.
+    - `lead_time_bucket`: kategoryzacja `lead_time_days` na przedziały (1,2-3,4-7,8-14,15-30,31-90,91+).
+    - `city_missing`: czy miasto użytkownika jest brakujące w danych.
+    - `postal_prefix2`: pierwsze dwa znaki kodu pocztowego użytkownika wyciągnięte z pliku `users.csv`.
+Model regresji logistycznej osiągnął dokładność około 51.6% oraz wartość ROC AUC około 0.505 na zbiorze testowym. Wyniki te są nieco lepsze niż model bazowy zwracający zawsze 1, ale nadal wskazują na ograniczoną zdolność rozróżniania między klasami.
 
 
 
