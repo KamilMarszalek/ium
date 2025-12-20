@@ -1,0 +1,905 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\usepackage[top=3cm, bottom=3cm, left=2cm, right=2cm]{geometry}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Dokumentacja wstępna: Analiza długich rezerwacji (zadanie 7)},
+  pdfauthor={Damian D'Souza; Kamil Marszałek},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Dokumentacja wstępna: Analiza długich rezerwacji (zadanie 7)}
+\author{Damian D'Souza \and Kamil Marszałek}
+\date{2025-12-20}
+
+\begin{document}
+\maketitle
+
+\subsection{1. Definicja problemu}\label{definicja-problemu}
+
+Obecnie brakuje nam wiedzy o czynnikach, które wpływają na długość
+rezerwacji. Nie wiemy, dlaczego niektórzy klienci rezerwują noclegi na
+dłuższe okresy (np. 7 dni+).
+
+To utrudnia pracę konsultantom - nie mogą skutecznie doradzać
+właścicielom, jakie udogodnienia warto dodać, żeby przyciągnąć klientów
+szukających dłuższych pobytów.
+
+\textbf{Cel projektu:} Zidentyfikować kluczowe czynniki (cechy oferty i
+profilu klienta), które zwiększają prawdopodobieństwo długiej
+rezerwacji. Dzięki temu konsultanci będą mogli konkretnie wskazać
+oferentom, co zmienić w ofercie (np. dodać szybkie Wi-Fi, wprowadzić
+rabaty tygodniowe), żeby zwiększyć szansę na dłuższe rezerwacje.
+
+\subsection{2. Podejście modelowe}\label{podejux15bcie-modelowe}
+
+\subsubsection{2.1 Co modelujemy}\label{co-modelujemy}
+
+\begin{itemize}
+	\item
+	      Zmienna wyjściowa \emph{y}:
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            \texttt{1} -- rezerwacja „Długa'',\\
+		      \item
+		            \texttt{0} -- rezerwacja „Krótka''.
+	      \end{itemize}
+	\item
+	      Robocza definicja długiej rezerwacji: pobyt np. powyżej 7 dni
+	\item
+	      Rodzaj zadania: klasyfikacja binarna.
+\end{itemize}
+
+\subsubsection{2.2 Wybór modelu}\label{wybuxf3r-modelu}
+
+Potrzebujemy modelu interpretowalnego, który pozwoli zrozumieć, które
+cechy są najważniejsze.
+
+Rozważane algorytmy:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      Regresja logistyczna
+	\item
+	      Drzewa decyzyjne (Gradient Boosting)
+\end{itemize}
+
+Oba umożliwiają łatwe wyodrębnienie wag cech.
+
+\subsubsection{2.3 Kryteria sukcesu}\label{kryteria-sukcesu}
+
+\subsubsection{2.3.1 Kryterium biznesowe}\label{kryterium-biznesowe}
+
+\textbf{Cel biznesowy:} Dostarczenie konsultantom konkretnych,
+wdrożeniowych rekomendacji dla właścicieli nieruchomości co pozwoli
+zwiększyć liczbę długich rezerwacji o 15\%.
+
+\textbf{Mierniki sukcesu biznesowego:}
+
+\begin{itemize}
+	\tightlist
+	\item
+	      Model identyfikuje minimum 3-5 kluczowych cech, które właściciele mogą
+	      zmodyfikować (np. dodanie Wi-Fi, wyposażonej kuchni)
+	\item
+	      Rekomendacje są zrozumiałe dla konsultantów bez technicznego
+	      background'u
+\end{itemize}
+
+\subsubsection{2.3.2 Kryterium analityczne}\label{kryterium-analityczne}
+
+\textbf{Metryki:} Ze względu na potencjalnie niezbalansowane dane
+(długie rezerwacje mogą być rzadsze), używamy metryk odpornych na
+dysproporcje klas:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      \textbf{ROC AUC} - główna metryka
+	\item
+	      \textbf{PR AUC} - metryka uzupełniająca, szczególnie ważna przy silnie
+	      niezbalansowanych danych, gdzie ROC AUC może dawać fałszywie
+	      optymistyczne wyniki
+\end{itemize}
+
+\textbf{Model bazowy do porównania:} (Opracowane modele zostały opisane
+niżej po analizie danych)
+
+\textbf{Model większościowy} - zawsze przewiduje klasę większościową
+(najprawdopodobniej ``krótka rezerwacja''). Taki model osiąga ROC AUC
+ok. 0.5 (równoważne losowemu zgadywaniu).
+
+\textbf{Cel analityczny:}
+
+Model musi spełniać następujące kryteria:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      \textbf{Przewidywalność:} Wykazać, że długość rezerwacji jest w ogóle
+	      przewidywalna na podstawie dostępnych danych
+	\item
+	      \textbf{Praktyczna użyteczność:} Osiągnąć \textbf{ROC AUC
+		      \textgreater{} 0.7}, co oznacza wyraźną poprawę względem modelu
+	      bazowego (0.5) i wskazuje na realną wartość predykcyjną
+	\item
+	      \textbf{Interpretowalność:} Umożliwić identyfikację najważniejszych
+	      cech z jasną interpretacją ich wpływu
+\end{itemize}
+
+\textbf{Proces ustalania progów:}
+
+\begin{enumerate}
+	\def\labelenumi{\arabic{enumi}.}
+	\tightlist
+	\item
+	      \textbf{Analiza danych:}
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            Zbadanie rozkładu klas (\% długich vs.~krótkich rezerwacji)
+		      \item
+		            Ocena jakości i kompletności danych
+	      \end{itemize}
+	\item
+	      \textbf{Wstępne modelowanie:}
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            Zbudowanie prostego modelu
+		      \item
+		            Ustalenie baseline'u dla ROC AUC
+		      \item
+		            Ocena czy problem jest w ogóle przewidywalny
+	      \end{itemize}
+	\item
+	      \textbf{Ustalenie progów:}
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            Na podstawie baseline'u określenie realistycznego celu
+		      \item
+		            Walidacja czy osiągnięta skuteczność przekłada się na wartość
+		            biznesową (czy zidentyfikowane czynniki są modyfikowalne przez
+		            właścicieli)
+	      \end{itemize}
+\end{enumerate}
+
+\subsection{3. Analiza danych}\label{analiza-danych}
+
+\subsubsection{3.1 Dostępne atrybuty}\label{dostux119pne-atrybuty}
+
+W tej sekcji omówimy różne atrybuty dostępne w naszym zestawie danych
+oraz ich znaczenie.
+
+\paragraph{Dane listings.csv}\label{dane-listings.csv}
+\mbox{}
+
+W pliku \texttt{listings.csv} znajduje się 79 atrybutów między innymi:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      \texttt{id}: Unikalny identyfikator oferty.
+	\item
+	      \texttt{name}: Nazwa oferty.
+	\item
+	      \texttt{price}: Cena oferty.
+	\item
+	      \texttt{room\_type}: Typ pokoju (np. całe mieszkanie, prywatny pokój).
+	\item
+	      \texttt{amenities}: Lista udogodnień dostępnych w ofercie np. czy jest
+	      pralka.
+	\item
+	      tekstowe pola opisowe np. \texttt{description},
+	      \texttt{neighborhood\_overview}.
+\end{itemize}
+
+\paragraph{Dane reviews.csv}\label{dane-reviews.csv}
+\mbox{}
+
+W pliku \texttt{reviews.csv} znajduje się 6 atrybutów:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      \texttt{listing\_id}: Unikalny identyfikator oferty, do której odnosi
+	      się recenzja.
+	\item
+	      \texttt{id}: Unikalny identyfikator recenzji.
+	\item
+	      \texttt{date}: Data dodania recenzji.
+	\item
+	      \texttt{reviewer\_id}: Unikalny identyfikator recenzenta.
+	\item
+	      \texttt{reviewer\_name}: Imię recenzenta.
+	\item
+	      \texttt{comments}: Treść recenzji.
+\end{itemize}
+
+\paragraph{Dane sessions.csv}\label{dane-sessions.csv}
+\mbox{}
+
+W pliku \texttt{sessions.csv} znajduje się 7 atrybutów:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      \texttt{action}: Typ akcji wykonanej przez użytkownika (np.
+	      wyszukiwanie, obejrzenie oferty, rezerwacja oferty, odwołanie
+	      rezerwacji).
+	\item
+	      \texttt{user\_id}: Identyfikator użytkownika wykonującego akcję.
+	\item
+	      \texttt{timestamp}: Znacznik czasu wykonania akcji.
+	\item
+	      \texttt{listing\_id}: Identyfikator oferty, na której wykonano.
+	\item
+	      \texttt{booking\_date}: Data rezerwacji oferty.
+	\item
+	      \texttt{booking\_duration}: (Prawdopodobnie) data zakończenia
+	      rezerwacji, chociaż nazwa sugeruje że to powinna być liczba!.
+	\item
+	      \texttt{booking\_id}: Identyfikator rezerwacji oferty.
+\end{itemize}
+
+\paragraph{Dane users.csv}\label{dane-users.csv}
+\mbox{}
+
+W pliku \texttt{users.csv} znajduje się 7 atrybutów:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      \texttt{id}: Identyfikator użytkownika.
+	\item
+	      \texttt{name}: Imię użytkownika.
+	\item
+	      \texttt{surname}: Nazwisko użytkownika.
+	\item
+	      Dane adresowe (prawdopodobnie adres zamieszkania użytkownika):
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            \texttt{city}: Miasto.
+		      \item
+		            \texttt{street}: Ulica.
+		      \item
+		            \texttt{street\_number}: Numer domu.
+		      \item
+		            \texttt{postal\_code}: Kod pocztowy.
+	      \end{itemize}
+\end{itemize}
+
+\subsubsection{3.2 Co jest istotne dla naszego
+	problemu?}\label{co-jest-istotne-dla-naszego-problemu}
+
+Chcemy dowiedzieć się, na podstawie jakich czynników użytkownicy
+rezerwują długie pobyty. Do zamodelowania problemu niezbędne będą dane
+występujące w pliku \texttt{sessions.csv}, gdyż to właśnie stamtąd
+możemy uzyskać informacje o długości rezerwacji. Data rozpoczęcia pobytu
+i data zakończenia pobytu (lub czas trwania rezerwacji - być może jest
+błąd w kolumnie) są kluczowymi atrybutami do analizy. Stworzymy na ich
+podstawie pojęcie binarne - \texttt{long\_stay} - i właśnie to chcemy,
+żeby model przewidywał jak najlepiej po wytrenowaniu. Z kolei z pliku
+\texttt{listings.csv} możemy pozyskać informacje o cechach ofert, które
+mogą wpływać na decyzje użytkowników dotyczące długości pobytu, takie
+jak cena, typ pokoju czy dostępne udogodnienia. Plik \texttt{users.csv}
+może dostarczyć dodatkowych informacji demograficznych o użytkownikach,
+które również mogą mieć wpływ na ich wybory rezerwacyjne. Plik
+\texttt{reviews.csv} może być mniej istotny dla naszego konkretnego
+problemu, ale może dostarczyć dodatkowych informacji o jakości ofert i
+doświadczeniach użytkowników.
+
+Atrybuty w pliku \texttt{listings.csv} można podzielić zgrubsza na kilka
+kategorii:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      Ekonomia pobytu:
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            \texttt{price}: Cena prawdopodobnie za noc. Jest ona podana z walutą
+		            (np. ``\$100.00''). Należałoby ją przekształcić na wartość
+		            numeryczną.
+		      \item
+		            \texttt{minimum\_nights}: Minimalna liczba nocy, na jaką można
+		            dokonać rezerwacji. Niektóre lokale są dostępne np. tylko na dłuższe
+		            pobyty (\textgreater30 dni).
+		      \item
+		            \texttt{maximum\_nights}: Maksymalna liczba nocy, na jaką można
+		            dokonać rezerwacji. Niektóre obiekty mogą zezwalać tylko na krótkie
+		            pobyty np. ich maksymalna liczba nocy to 7.
+		      \item
+		            \texttt{has\_availability}: Czy lokal jest dostępny do rezerwacji.
+	      \end{itemize}
+	\item
+	      Standard i udogodnienia:
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            \texttt{room\_type}: Czy to całe mieszkanie, czy pokój prywatny lub
+		            współdzielony. Przy długich pobytach potencjalnie większa przestrzeń
+		            i prywatność mogą być ważne.
+		      \item
+		            \texttt{amenities}: Zawiera listę udogodnień oferowanych przez
+		            lokal, takich jak pralka, kuchnia, Wi-Fi, akceptowanie zwierząt itp.
+		            Udogodnienia te mogą znacząco wpłynąć na komfort długiego pobytu.
+		            Trzeba będzie przetworzyć tę kolumnę, aby wyodrębnić konkretne
+		            udogodnienia jako cechy binarne (np. \texttt{has\_washing\_machine},
+		            \texttt{has\_kitchen}).
+		      \item
+		            \texttt{accommodates}: Liczba osób, które lokal może pomieścić. Dla
+		            dłuższych pobytów może być istotne, czy lokal jest odpowiedni dla
+		            większych grup lub rodzin.
+		      \item
+		            \texttt{bedrooms}, \texttt{beds}: Liczba sypialni i łóżek w lokalu.
+		            Więcej sypialni i łóżek może być korzystne dla dłuższych pobytów,
+		            zwłaszcza dla rodzin lub grup.
+		      \item
+		            \texttt{bathrooms}: Liczba łazienek w lokalu. Więcej łazienek może
+		            zwiększyć komfort podczas dłuższych pobytów.
+		      \item
+		            \texttt{bathrooms\_text}: Opis łazienek - czy są wspólne, prywatne
+	      \end{itemize}
+	\item
+	      Lokalizacja i otoczenie:
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            \texttt{neighbourhood\_cleansed}: Nazwa dzielnicy, w której znajduje
+		            się lokal.
+		      \item
+		            \texttt{neighbourhood\_overview}: Opis okolicy. Dla długich pobytów
+		            ważne może być, czy okolica jest spokojna, bezpieczna i czy oferuje
+		            udogodnienia takie jak sklepy, restauracje itp. W przeciwieństwie do
+		            krótkich pobytów, gdzie lokalizacja w centrum miasta, blisko miejsc
+		            turystycznie atrakcyjnych może być bardziej pożądana, długie pobyty
+		            mogą wymagać bardziej zrównoważonej lokalizacji.
+		      \item
+		            \texttt{latitude}, \texttt{longitude}: Dokładne współrzędne
+		            geograficzne lokalu. Mogą być użyteczne do analizy lokalizacji i jej
+		            wpływu na decyzje rezerwacyjne.
+	      \end{itemize}
+	\item
+	      Zaufanie i wiarygodność:
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            \texttt{host\_is\_superhost}: Czy gospodarz ma status superhosta.
+		            Gospodarze z tym statusem mogą być postrzegani jako bardziej
+		            wiarygodni, co może wpływać na decyzje dotyczące długich pobytów.
+		      \item
+		            \texttt{host\_response\_time}: Czas odpowiedzi gospodarza. Szybka
+		            odpowiedź może być ważna dla gości planujących dłuższe pobyty.
+		            Lepiej, gdy gospodarz szybko odpowiada na zapytania np. within an
+		            hour.
+		      \item
+		            \texttt{review\_scores\_rating}: Ogólna ocena lokalu.
+		      \item
+		            \texttt{review\_scores\_value}: Ocena stosunku jakości do ceny.
+		      \item
+		            \texttt{number\_of\_reviews}: Liczba recenzji. Większa liczba
+		            recenzji może świadczyć o popularności i zaufaniu do lokalu.
+	      \end{itemize}
+\end{itemize}
+
+Z pliku \texttt{users.csv} nie użyjemy danych personalnych takich jak
+imię, nazwisko czy ulica. Być może użyjemy atrybut \texttt{city}, aby
+zobaczyć, czy lokalizacja użytkownika ma wpływ na długość rezerwacji np.
+czy osoby z większych miast rezerwują dłuższe pobyty.
+
+Dane, które są w pliku \texttt{reviews.csv} prawdopodobnie nie będą
+użyte w naszym modelu, ponieważ recenzje są dodawane po zakończeniu
+pobytu i nie wpływają na decyzję o długości rezerwacji. Ważniejsza może
+być zagregowana ocena, które jest już w pliku \texttt{listings.csv}.
+
+\subsubsection{3.3 Problemy ze złączeniami danych między
+	plikami}\label{problemy-ze-zux142ux105czeniami-danych-miux119dzy-plikami}
+
+Aby wykorzystać dane z różnych plików, musimy je łączyć po kluczach.
+
+\paragraph{\texorpdfstring{Złączenie \texttt{sessions.csv}
+		\(\leftrightarrow\)
+		\texttt{listings.csv}}{Złączenie sessions.csv i listings.csv}}\label{zux142ux105czenie-sessions.csv-leftrightarrow-listings.csv}
+\mbox{}
+
+Dla \texttt{listings.csv} i \texttt{sessions.csv} kluczami są
+odpowiednio \texttt{listings.id} oraz \texttt{sessions.listing\_id}.
+Analizę pokrycia wykonujemy w dwóch ujęciach: pokrycie wierszy po
+złączeniu oraz pokrycie unikalnych kluczy (różnorodności ofert).
+
+\begin{itemize}
+	\item
+	      Bez filtrowania po \texttt{action}: ok. 74\% rekordów
+	      \texttt{sessions.csv} ma niepusty \texttt{listing\_id}, a spośród nich
+	      ok. 67.6\% znajduje dopasowanie w \texttt{listings.csv} (łączny row
+	      coverage \textasciitilde50.1\%). Jednocześnie tylko ok. 13.2\%
+	      unikalnych \texttt{listing\_id} obserwowanych w \texttt{sessions.csv}
+	      występuje w \texttt{listings.csv}, co sugeruje, że
+	      \texttt{listings.csv} jest ograniczonym podzbiorem ofert, a
+	      dopasowania dotyczą głównie najczęściej występujących listingów.
+	\item
+	      Dla akcji \texttt{book\_listing} (rezerwacje): ok. 80\% rekordów ma
+	      niepusty \texttt{listing\_id}, jednak tylko ok. 7.7\% z nich znajduje
+	      dopasowanie w \texttt{listings.csv} (łączny row coverage
+	      \textasciitilde6.2\%). Oznacza to, że cechy ofert z
+	      \texttt{listings.csv} będą dostępne tylko dla niewielkiej części
+	      rezerwacji; trening modelu oparty głównie o cechy ofert może być przez
+	      to niemożliwy lub silnie obciążony selekcją danych.
+\end{itemize}
+
+Jednak zauważyliśmy, że wiele brakujących \texttt{id} w
+\texttt{listings.csv} można by było odzyskać, analizując kolumnę
+\texttt{listing\_url} i wyciągając z niej identyfikatory ofert. Po
+naprawie braków w \texttt{listings.csv}, ponowiliśmy analizę złączeń:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      Bez filtrowania po \texttt{action}: pokrycie wierszy po złączeniu
+	      wzrosło do ok. 60.3\%, a pokrycie unikalnych kluczy do ok. 15.8\%.
+	      Natomiast dopasowanie wzrosło do ok. 81.4\% rekordów z niepustym
+	      \texttt{listing\_id}.
+	\item
+	      Dla akcji \texttt{book\_listing}: pokrycie wierszy po złączeniu
+	      wzrosło do ok. 7.4\%, a pokrycie unikalnych kluczy do ok. 9.4\%.
+	      Dopasowanie wzrosło do ok. 9.3\% rekordów z niepustym
+	      \texttt{listing\_id}. Mimo poprawy, cechy ofert z \texttt{listings}
+	      nadal będą dostępne tylko dla małej części rezerwacji, więc będzie
+	      problem z trenowaniem.
+\end{itemize}
+
+Następnie poczyniliśmy obserwację, że wiele rekordów w
+\texttt{sessions.csv} ma nieustawione atrybut \texttt{action}, mimo że
+posiadają daty rezerwacji i wyglądają jak rezerwacje. Dzięki temu
+pozyskaliśmy dodatkowe 15000 rekordów, które są rezerwacjami. Po
+ponownym przeanalizowaniu złączeń po naprawie \texttt{listings.csv} i
+uzupełnieniu \texttt{sessions.csv}:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      Bez filtrowania po \texttt{action}: nie zmieniły się wyniki złączenia.
+	\item
+	      Dla akcji \texttt{book\_listing} (rezerwacje): pokrycie wierszy po
+	      złączeniu wyniosło ok. 7.4\%, a pokrycie unikalnych kluczy to ok.
+	      9.5\% (minimalny wzrost). Dopasowanie wyniosło ok. 9.2\% rekordów z
+	      niepustym \texttt{listing\_id} (minimalny spadek). Dalej cechy ofert z
+	      \texttt{listings} będą dostępne tylko dla małej części rezerwacji.
+	      Niemniej jednak dodatkowe rekordy rezerwacji mogą pomóc w trenowaniu
+	      modelu.
+\end{itemize}
+
+\paragraph{\texorpdfstring{Złączenie \texttt{sessions.csv}
+		\(\leftrightarrow\)
+		\texttt{users.csv}}{Złączenie sessions.csv i users.csv}}\label{zux142ux105czenie-sessions.csv-leftrightarrow-users.csv}
+\mbox{}
+
+Klucz łączący to \texttt{sessions.user\_id} oraz \texttt{users.id}.
+
+\begin{itemize}
+	\item
+	      Bez filtrowania po \texttt{action}: ok. 80\% rekordów
+	      \texttt{sessions.csv} ma niepusty \texttt{user\_id}, a spośród nich
+	      ok. 80\% znajduje dopasowanie w \texttt{users.csv} (łączny row
+	      coverage \textasciitilde64\%). Pokrycie unikalnych \texttt{user\_id}
+	      wynosi ok. 80\%, co sugeruje, że dla większości użytkowników obecnych
+	      w sesjach istnieją odpowiadające im dane w \texttt{users.csv}, choć
+	      ok. 20\% identyfikatorów nie jest możliwe do sparowania.
+	\item
+	      Dla akcji \texttt{book\_listing} (rezerwacje): wyniki są bardzo
+	      zbliżone.
+\end{itemize}
+
+\paragraph{\texorpdfstring{Złączenie \texttt{reviews.csv}
+		\(\leftrightarrow\)
+		\texttt{users.csv}}{Złączenie reviews.csv i users.csv}}\label{zux142ux105czenie-reviews.csv-leftrightarrow-users.csv}
+\mbox{}
+
+Klucz łączący to \texttt{reviews.reviewer\_id} oraz \texttt{users.id}.
+
+\begin{itemize}
+	\tightlist
+	\item
+	      Ok. 80\% rekordów \texttt{reviews.csv} ma niepusty
+	      \texttt{reviewer\_id}, a spośród nich ok. 80\% znajduje dopasowanie w
+	      \texttt{users.csv} (łączny row coverage \textasciitilde64\%). Pokrycie
+	      unikalnych \texttt{reviewer\_id} wynosi ok. 80\%.
+\end{itemize}
+
+\paragraph{\texorpdfstring{Złączenie \texttt{reviews.csv}
+		\(\leftrightarrow\)
+		\texttt{listings.csv}}{Złączenie reviews.csv i listings.csv}}\label{zux142ux105czenie-reviews.csv-leftrightarrow-listings.csv}
+\mbox{}
+
+Klucz łączący to \texttt{reviews.listing\_id} oraz \texttt{listings.id}.
+
+\begin{itemize}
+	\tightlist
+	\item
+	      Ok. 80.1\% rekordów w \texttt{reviews.csv} ma niepusty
+	      \texttt{listing\_id}. Jednak tylko ok. 7.6\% z nich znajduje
+	      dopasowanie w \texttt{listings.csv}, co daje łączne pokrycie wierszy
+	      po złączeniu na poziomie ok. 6.1\%. Pokrycie po unikalnych kluczach
+	      jest również niskie: tylko ok. 8.0\% unikalnych \texttt{listing\_id} z
+	      \texttt{reviews.csv} występuje w \texttt{listings.csv}
+	      (\texttt{unique\_key\_coverage} \textasciitilde0.0803). Wskazuje to,
+	      że \texttt{listings.csv} jest ograniczonym podzbiorem ofert i nie
+	      pozwala na wzbogacenie większości recenzji o cechy oferty.
+\end{itemize}
+
+\subsubsection{3.4 Braki danych}\label{braki-danych}
+
+Przeanalizowaliśmy braki danych w plikach. Braki są dosyć duże:
+
+\begin{itemize}
+	\tightlist
+	\item
+	      Plik \texttt{listings.csv} ma braki we wszystkich kolumnach - minimum
+	      18\% w kolumnie \texttt{host\_has\_profile\_pic}, maksimum 100\% w
+	      kolumnie \texttt{calendar\_updated}. Jednak dla większości kolumn
+	      braki są w przedziale od ok. 20\% do 40\%. Po naprawie kolumny
+	      \texttt{id} (opisanej wyżej) braki w tej kolumnie zostały zredukowane
+	      do ok. 4.6\%.
+	\item
+	      Plik \texttt{sessions.csv} również ma braki we wszystkich kolumnach
+	      minimum ok. 20\% w kolumnach \texttt{action}, \texttt{user\_id},
+	      \texttt{timestamp}, maksymalne braki to ok. 94\% w kolumnach
+	      \texttt{booking\_date}, \texttt{booking\_duration},
+	      \texttt{booking\_id}. Po zastosowaniu naprawy i uzupełnienia
+	      \texttt{action} o brakujące wartości, braki w kolumnie \texttt{action}
+	      zmalały do 19\%. Braki w kolumnach związanych z rezerwacjami są
+	      zrozumiałe, ponieważ nie każda sesja kończy się rezerwacją. Jednak
+	      zmienną celową \texttt{long\_stay} można będzie utworzyć tylko dla
+	      około 4.7\% rekordów, gdyż braki w kolumnach \texttt{booking\_date} i
+	      \texttt{booking\_duration} nie występują jednocześnie.
+	\item
+	      Pliki \texttt{users.csv} i \texttt{reviews.csv} mają braki we
+	      wszystkich kolumnach - minimum na poziomie około 20\%.
+\end{itemize}
+
+\subsubsection{3.5 Definicja targetu}\label{definicja-targetu}
+
+Na potrzeby naszego problemu zbudujemy dataset
+\texttt{reservations.csv}, który będzie zawierał tylko rekordy z
+\texttt{sessions.csv}, które reprezentują rezerwacje (czyli mają
+uzupełnione kolumny \texttt{booking\_date} i
+\texttt{booking\_duration}). Kolumnę \texttt{booking\_date} nazwiemy
+\texttt{checkin}, a kolumnę \texttt{booking\_duration} nazwiemy
+\texttt{checkout}. Następnie na ich podstawie zostanie wyliczony czas
+trwania rezerwacji w dniach jako różnica między \texttt{checkout} a
+\texttt{checkin}. Stworzymy nową kolumnę \texttt{lead\_time\_days},
+która będzie reprezentować liczbę dni między datą dokonania rezerwacji a
+datą zameldowania (różnica między \texttt{checkin} a datą wyciągniętą z
+\texttt{timestamp}). Na podstawie czasu trwania rezerwacji zdefiniujemy
+zmienną docelową \texttt{long\_stay}, która przyjmie wartość 1, jeśli
+czas trwania rezerwacji wyniesie co najmniej x dni, w przeciwnym razie
+przyjmie wartość 0. Docelowo jeśli uda się uzyskać lepsze dane, można
+będzie rozważyć użycie atrybutów dających większy sygnał do
+przewidywania długich pobytów.
+
+\subsubsection{3.6 Analiza rozkładów
+	danych}\label{analiza-rozkux142aduxf3w-danych}
+
+\paragraph{Analiza rozkładu długości
+	rezerwacji}\label{analiza-rozkux142adu-dux142ugoux15bci-rezerwacji}
+\mbox{}
+\nopagebreak
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{../plots/bookings_nights.png}
+	\caption{Rozkład długości rezerwacji w dniach}
+	\label{fig:bookings_nights}
+\end{figure}
+Na podstawie na razie dostępnych danych widzimy że rozkład długości
+rezerwacji jest stosunkowo płaski (delikatna przewaga dla wartości
+poniżej 7), dla każdej z wartości od 1 do 14. Dlatego proponujemy
+ustawić próg x na 7 dni, co pozwoli nam zrównoważyć klasy w zmiennej
+docelowej \texttt{long\_stay}. Ostateczna wartość progu może być
+dostosowana na podstawie dalszej analizy rozkładu długości rezerwacji i
+wymagań biznesowych.
+
+\paragraph{Analiza rozkładu ile dni przed zameldowaniem jest dokonywana
+	rezerwacja}\label{analiza-rozkux142adu-ile-dni-przed-zameldowaniem-jest-dokonywana-rezerwacja}
+\mbox{}
+\nopagebreak
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{../plots/bookings_lead_time_days.png}
+	\caption{Rozkład liczby dni wyprzedzenia rezerwacji}
+	\label{fig:lead_time}
+\end{figure}
+Widzimy, że większość rezerwacji jest dokonywana na krótko przed datą
+zameldowania, widzimy wyraźną dominację w przedziale do 30 dni przed
+zameldowaniem. Jednak istnieje również zauważalna liczba rezerwacji
+dokonywanych z większym wyprzedzeniem, sięgającym nawet kilkuset dni.
+
+\paragraph{Analiza rozkładu zmiennej docelowej
+	long\_stay}\label{analiza-rozkux142adu-zmiennej-docelowej-long_stay}
+\mbox{}
+\nopagebreak
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\textwidth]{../plots/bookings_long_stay_pie.png}
+	\caption{Procent rezerwacji długoterminowych (zmienna \texttt{long\_stay})}
+	\label{fig:long_stay_pie}
+\end{figure}
+Widzimy, że około 52.9\% rezerwacji to rezerwacje długoterminowe (co
+najmniej 7 dni), podczas gdy 47.1\% to rezerwacje krótkoterminowe
+(poniżej 7 dni). Oznacza to, że klasy w zmiennej docelowej
+\texttt{long\_stay} są stosunkowo zrównoważone, co jest korzystne dla
+trenowania modeli predykcyjnych.
+
+\paragraph{Analiza rozkładu kwartałów
+	zameldowania}\label{analiza-rozkux142adu-kwartaux142uxf3w-zameldowania}
+\mbox{}
+\nopagebreak
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{../plots/bookings_checkin_quarter.png}
+	\caption{Rozkład kwartałów zameldowania}
+	\label{fig:checkin_quarter}
+\end{figure}
+Widzimy, że pierwsze rezerwacje zaczynają się w drugim kwartale 2011
+roku, następnie widzimy dość stabilny wzrost liczby rezerwacji aż do
+końca 2019 roku. W 2020 roku widzimy spadek liczby rezerwacji, co jest
+zgodne z globalnym trendem związanym z pandemią COVID-19. Po 2020 roku
+widzimy ponowny wzrost liczby rezerwacji, co sugeruje powrót do
+normalności w branży turystycznej. Wzrost ostro przyspiesza aż do
+ostatniego kwartału 2024 roku. Następnie mamy niski słupek w pierwszym
+kwartale 2025 roku, co może być związane z brakiem danych za ten okres.
+
+\paragraph{Analiza rozkładu kwartałów z jakich pochodzą
+	oferty}\label{analiza-rozkux142adu-kwartaux142uxf3w-z-jakich-pochodzux105-oferty}
+\mbox{}
+\nopagebreak
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{../plots/listings_last_scraped.png}
+	\caption{Rozkład kwartałów, z jakich pochodzą oferty}
+	\label{fig:listings_scraped}
+\end{figure}
+Widzimy, że oferty w naszym zestawie danych pochodzą tylko z pierwszego
+kwartału 2025 roku. Jest to duży problem, bo nie mamy wiedzy o tym, jak
+oferty wyglądały w przeszłości. Standard obiektów mógł się zmieniać w
+czasie, podobnie jak ceny i dostępność. Cechy z \texttt{listings.csv} to
+snapshot z 2025Q1, więc mogą nie odzwierciedlać stanu historycznego
+ofert. To w zasadzie wyklucza użycie cech z \texttt{listings.csv} do
+trenowania modelu predykcyjnego dla naszego problemu.
+
+\paragraph{Analiza rozkładu minimalnej liczby nocy
+	rezerwacji}\label{analiza-rozkux142adu-minimalnej-liczby-nocy-rezerwacji}
+\mbox{}
+\nopagebreak
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{../plots/listings_minimum_nights_capped14.png}
+	\caption{Rozkład minimalnej liczby nocy rezerwacji}
+	\label{fig:min_nights}
+\end{figure}Widzimy, że większość ofert ma minimalną liczbę nocy ustawioną na 1, co
+oznacza, że można dokonać rezerwacji na jedną noc. Jednak istnieje
+również zauważalna liczba ofert z wyższymi minimalnymi wymaganiami,
+sięgającymi do 14 nocy i więcej. Potencjalnym problemem jest to, że w
+naszych danych nie ma żadnych rezerwacji dłuższych niż 14 nocy, więc te
+oferty wogóle nie są reprezentowane w danych rezerwacji.
+
+\subsubsection{3.7 Model baseline}\label{model-baseline}
+
+Stworzyliśmy dwa proste modele bazowe do przewidywania zmiennej
+docelowej \texttt{long\_stay}:
+
+\begin{enumerate}
+	\def\labelenumi{\arabic{enumi}.}
+	\tightlist
+	\item
+	      Model zwracający zawsze 1 (długoterminowa rezerwacja). Osiągnął on
+	      52.9\% dokładności, co jest zgodne z rozkładem klas w danych.
+	      Natomiast wartość ROC AUC wyniosła 0.5, co oznacza brak zdolności
+	      rozróżniania między klasami.
+	\item
+	      Model oparty na regresji logistycznej wykorzystujący cechy wyłuskane
+	      tylko z pliku \texttt{sessions.csv} i \texttt{users.csv}, bez cech z
+	      \texttt{listings.csv} ze względu na problemy z aktualnością danych i
+	      złączeniami. Cechy użyte w modelu regresji logistycznej to:
+
+	      \begin{itemize}
+		      \tightlist
+		      \item
+		            \texttt{lead\_time\_days}: liczba dni między datą dokonania
+		            rezerwacji a datą zameldowania, wyliczona jako różnica między
+		            \texttt{checkin} a datą wyciągniętą z \texttt{time\ stamp}.
+		      \item
+		            \texttt{checkin\_month}: miesiąc zameldowania wyciągnięty z daty
+		            \texttt{checkin}.
+		      \item
+		            \texttt{checkin\_year}: rok zameldowania wyciągnięty z daty
+		            \texttt{checkin}.
+		      \item
+		            \texttt{checkin\_dow}: dzień tygodnia zameldowania wyciągnięty z
+		            daty \texttt{checkin}.
+		      \item
+		            \texttt{checkin\_is\_weekend}: czy data zameldowania przypada na
+		            weekend (sobota lub niedziela).
+		      \item
+		            \texttt{user\_city}: miasto użytkownika wyciągnięte z pliku
+		            \texttt{users.csv}.
+		      \item
+		            \texttt{booking\_month}: miesiąc dokonania rezerwacji wyciągnięty z
+		            daty w \texttt{timestamp}.
+		      \item
+		            \texttt{booking\_dow}: dzień tygodnia dokonania rezerwacji
+		            wyciągnięty z daty w \texttt{timestamp}.
+		      \item
+		            \texttt{booking\_hour}: godzina dokonania rezerwacji wyciągnięta z
+		            daty w \texttt{timestamp}.
+		      \item
+		            \texttt{lead\_time\_bucket}: kategoryzacja \texttt{lead\_time\_days}
+		            na przedziały (1,2-3,4-7,8-14,15-30,31-90,91+).
+		      \item
+		            \texttt{city\_missing}: czy miasto użytkownika jest brakujące w
+		            danych. Model regresji logistycznej osiągnął dokładność około 51.6\%
+		            oraz wartość ROC AUC około 0.505 na zbiorze testowym. Wyniki te są
+		            nieco lepsze niż model bazowy zwracający zawsze 1, ale nadal
+		            wskazują na ograniczoną zdolność rozróżniania między klasami.
+	      \end{itemize}
+\end{enumerate}
+
+\begin{longtable}[]{@{}
+	>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1304}}
+	>{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}
+	>{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}
+	>{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}
+	>{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}
+	>{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}@{}}
+	\toprule\noalign{}
+	\begin{minipage}[b]{\linewidth}\raggedright
+		feature
+	\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+		                 pearson\_corr
+	                 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+		                                  spearman\_corr
+	                                  \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+		                                                   mutual\_info
+	                                                   \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+		                                                                    cramers\_v
+	                                                                    \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+		                                                                                     chi2\_p
+	                                                                                     \end{minipage}                                                                                                             \\
+	\midrule\noalign{}
+	\endhead
+	\bottomrule\noalign{}
+	\endlastfoot
+	user\_city                                  & ---                                        & ---                                        & 0.005817                                   & 0.020729                                   & 9.69e-01 \\
+	checkin\_year                               & -0.008249                                  & -0.012210                                  & 0.000397                                   & 0.028183                                   &
+	7.66e-08                                                                                                                                                                                                                                   \\
+	lead\_time\_bucket                          & ---                                        & ---                                        & 0.000380                                   & 0.027508                                   & 1.07e-09 \\
+	booking\_hour                               & 0.001695                                   & 0.001692                                   & 0.000119                                   & 0.015417                                   & 7.90e-01 \\
+	checkin\_month                              & -0.002166                                  & -0.002148                                  & 0.000066                                   & 0.011485                                   &
+	5.18e-01                                                                                                                                                                                                                                   \\
+	checkin\_dow                                & 0.005197                                   & 0.005178                                   & 0.000061                                   & 0.011075                                   & 1.51e-01 \\
+	booking\_dow                                & 0.003383                                   & 0.003405                                   & 0.000056                                   & 0.010622                                   & 2.77e-01 \\
+	booking\_month                              & -0.001477                                  & -0.001466                                  & 0.000047                                   & 0.009668                                   &
+	8.45e-01                                                                                                                                                                                                                                   \\
+	checkin\_is\_weekend                        & 0.005203                                   & 0.005203                                   & 0.000014                                   & 0.005174                                   &
+	1.51e-01                                                                                                                                                                                                                                   \\
+	city\_missing                               & 0.001506                                   & 0.001506                                   & 0.000001                                   & 0.001480                                   & 6.81e-01 \\
+	lead\_time\_days                            & -0.006086                                  & -0.000548                                  & 0.000000                                   & ---                                        & ---      \\
+\end{longtable}
+
+W powyższej tabeli przedstawiono różne miary statystyczne oceniające
+związek między cechami a zmienną docelową \texttt{long\_stay}. Wartości
+pearsona i spearmana są bardzo niskie dla wszystkich cech, co wskazuje
+na słabą liniową i monotoniczną zależność. Miary informacji wzajemnej
+również są bardzo niskie, co sugeruje, że cechy te dostarczają niewiele
+informacji o zmiennej docelowej. Wartości Cramér's V i p-wartości z
+testu chi-kwadrat również wskazują na brak istotnych zależności między
+cechami a \texttt{long\_stay}. Ogólnie rzecz biorąc, wyniki te sugerują,
+że dostępne cechy mają ograniczoną zdolność predykcyjną dla naszego
+problemu.
+
+\subsubsection{3.8 Podsumowanie}\label{podsumowanie}
+
+Spróbowaliśmy zbudować modele bazowe do przewidywania długoterminowych
+rezerwacji na podstawie tych danych które nie były wybrakowane oraz dały
+się połączyć na podstawie pary kluczy identyfikujących. Modele te
+osiągnęły jedynie nieznacznie lepsze wyniki niż proste modele bazowe, co
+wskazuje na ograniczoną zdolność predykcyjną dostępnych cech. Głównym
+wyzwaniem jest brak historycznych danych ofert w \texttt{listings.csv},
+co uniemożliwia wykorzystanie potencjalnie istotnych cech ofert do
+trenowania modeli. Również problemem jest brak możliwości złączenia
+wszystkich rezerwacji z cechami ofert ze względu na niezgadzające się
+identyfikatory. Aby poprawić wyniki, konieczne może być pozyskanie
+bardziej kompletnych danych historycznych ofert oraz lepsze złączenie
+danych między plikami. Przydatne mogłyby się też okazać dane dotyczące
+konkretnych rezerwacji, skąd moglibyśmy pozyskać ceny rezerwacji i inne
+cechy.
+
+\end{document}
