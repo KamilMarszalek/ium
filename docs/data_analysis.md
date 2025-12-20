@@ -89,7 +89,7 @@ Ważniejsza może być zagregowana ocena, które jest już w pliku `listings.csv
 
 Aby wykorzystać dane z różnych plików, musimy je łączyć po kluczach.
 
-### Złączenie `sessions.csv` ↔ `listings.csv`
+### Złączenie `sessions.csv` $\leftrightarrow$ `listings.csv`
 
 Dla `listings.csv` i `sessions.csv` kluczami są odpowiednio `listings.id` oraz `sessions.listing_id`. Analizę pokrycia wykonujemy w dwóch ujęciach: pokrycie wierszy po złączeniu oraz pokrycie unikalnych kluczy (różnorodności ofert).
 
@@ -107,7 +107,7 @@ Następnie poczyniliśmy obserwację, że wiele rekordów w `sessions.csv` ma ni
 - Bez filtrowania po `action`: nie zmieniły się wyniki złączenia.
 - Dla akcji `book_listing` (rezerwacje): pokrycie wierszy po złączeniu wyniosło ok. 7.4%, a pokrycie unikalnych kluczy to ok. 9.5% (minimalny wzrost). Dopasowanie wyniosło ok. 9.2% rekordów z niepustym `listing_id` (minimalny spadek). Dalej cechy ofert z `listings` będą dostępne tylko dla małej części rezerwacji. Niemniej jednak dodatkowe rekordy rezerwacji mogą pomóc w trenowaniu modelu.
 
-### Złączenie `sessions.csv` ↔ `users.csv`
+### Złączenie `sessions.csv` $\leftrightarrow$ `users.csv`
 
 Klucz łączący to `sessions.user_id` oraz `users.id`.
 
@@ -115,13 +115,13 @@ Klucz łączący to `sessions.user_id` oraz `users.id`.
 
 - Dla akcji `book_listing` (rezerwacje): wyniki są bardzo zbliżone.
 
-### Złączenie `reviews.csv` ↔ `users.csv`
+### Złączenie `reviews.csv` $\leftrightarrow$ `users.csv`
 
 Klucz łączący to `reviews.reviewer_id` oraz `users.id`.
 
 - Ok. 80% rekordów `reviews.csv` ma niepusty `reviewer_id`, a spośród nich ok. 80% znajduje dopasowanie w `users.csv` (łączny row coverage ~64%). Pokrycie unikalnych `reviewer_id` wynosi ok. 80%.
 
-### Złączenie `reviews.csv` ↔ `listings.csv`
+### Złączenie `reviews.csv` $\leftrightarrow$ `listings.csv`
 
 Klucz łączący to `reviews.listing_id` oraz `listings.id`.
 
