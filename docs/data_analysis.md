@@ -140,7 +140,7 @@ Widzimy, że pierwsze rezerwacje zaczynają się w drugim kwartale 2011 roku, na
 
 ## Analiza rozkładu kwartałów z jakich pochodzą oferty
 ![Rozkład kwartałów z jakich pochodzą oferty](../plots/listings_last_scraped.png)
-Widzimy, że oferty w naszym zestawie danych pochodzą tylko z pierwszego kwartału 2025 roku. Jest to duży problem, bo nie mamy wiedzy o tym, jak oferty wyglądały w przeszłości. Standard obiektów mógł się zmieniać w czasie, podobnie jak ceny i dostępność. To w zasadzie wyklucza użycie cech z `listings.csv` do trenowania modelu predykcyjnego dla naszego problemu.
+Widzimy, że oferty w naszym zestawie danych pochodzą tylko z pierwszego kwartału 2025 roku. Jest to duży problem, bo nie mamy wiedzy o tym, jak oferty wyglądały w przeszłości. Standard obiektów mógł się zmieniać w czasie, podobnie jak ceny i dostępność. Cechy z `listings.csv` to snapshot z 2025Q1, więc mogą nie odzwierciedlać stanu historycznego ofert. To w zasadzie wyklucza użycie cech z `listings.csv` do trenowania modelu predykcyjnego dla naszego problemu.
 
 ## Analiza rozkładu minimalnej liczby nocy rezerwacji
 ![Rozkład minimalnej liczby nocy rezerwacji](../plots/listings_minimum_nights_capped14.png)
