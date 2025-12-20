@@ -277,7 +277,7 @@ def main() -> None:
                     .dt.to_period("Q")
                     .astype("string"),
                     title="Rozkład kwartałów last_scraped w listings.csv",
-                    xlabel="Kwartał ostatniego skrobania",
+                    xlabel="Kwartał ostatniego scrapingu",
                     out_png=out_dir / "listings_last_scraped.png",
                     pdf=pdf,
                     fig_width=5,
