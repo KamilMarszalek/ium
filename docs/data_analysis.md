@@ -161,13 +161,11 @@ Stworzyliśmy dwa proste modele bazowe do przewidywania zmiennej docelowej `long
     - `booking_hour`: godzina dokonania rezerwacji wyciągnięta z daty w `timestamp`.
     - `lead_time_bucket`: kategoryzacja `lead_time_days` na przedziały (1,2-3,4-7,8-14,15-30,31-90,91+).
     - `city_missing`: czy miasto użytkownika jest brakujące w danych.
-    - `postal_prefix2`: pierwsze dwa znaki kodu pocztowego użytkownika wyciągnięte z pliku `users.csv`.
 Model regresji logistycznej osiągnął dokładność około 51.6% oraz wartość ROC AUC około 0.505 na zbiorze testowym. Wyniki te są nieco lepsze niż model bazowy zwracający zawsze 1, ale nadal wskazują na ograniczoną zdolność rozróżniania między klasami. 
 
 | feature | pearson_corr | spearman_corr | mutual_info | cramers_v | chi2_p |
 |---|---:|---:|---:|---:|---:|
 | user_city | — | — | 0.005817 | 0.020729 | 9.69e-01 |
-| postal_prefix2 | 0.005759 | 0.005761 | 0.002982 | — | — |
 | checkin_year | -0.008249 | -0.012210 | 0.000397 | 0.028183 | 7.66e-08 |
 | lead_time_bucket | — | — | 0.000380 | 0.027508 | 1.07e-09 |
 | booking_hour | 0.001695 | 0.001692 | 0.000119 | 0.015417 | 7.90e-01 |
