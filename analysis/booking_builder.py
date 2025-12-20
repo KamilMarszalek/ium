@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 
@@ -20,7 +19,13 @@ def build_bookings_from_sessions(sessions: pd.DataFrame) -> pd.DataFrame:
     if "booking_ts" in book.columns:
         book["lead_time_days"] = (book["checkin"] - book["booking_ts"]).dt.days
     book["long_stay"] = book["nights"] >= 7
-    book["checkin_quarter"] = book["checkin"].dt.to_period("Q").astype("string")
+    book["checkin_quarter"] = (
+        book["checkin"]
+        .dt.to_period("Q")
+        .astype(
+            "string",
+        )
+    )
     book["checkin_month"] = book["checkin"].dt.month
     return book
 
@@ -30,15 +35,19 @@ def prepare_bookings_to_train(sessions: pd.DataFrame) -> pd.DataFrame:
     bookings["checkin_year"] = bookings["checkin"].dt.year
     bookings["checkin_month"] = bookings["checkin"].dt.month
     bookings["checkin_dow"] = bookings["checkin"].dt.dayofweek
-    bookings["checkin_is_weekend"] = bookings["checkin_dow"].isin([5, 6]).astype("int8")
+    bookings["checkin_is_weekend"] = (
+        bookings["checkin_dow"]
+        .isin(
+            [5, 6],
+        )
+        .astype("int8")
+    )
 
     bookings["booking_month"] = bookings["booking_ts"].dt.month
     bookings["booking_dow"] = bookings["booking_ts"].dt.dayofweek
     bookings["booking_hour"] = bookings["booking_ts"].dt.hour
 
     lt = bookings["lead_time_days"].clip(lower=0)
-    bookings["lead_time_log1p"] = np.log1p(lt)
-
     bookings["lead_time_bucket"] = pd.cut(
         lt,
         bins=[-0.1, 0, 1, 3, 7, 14, 30, 90, 10**9],
@@ -48,31 +57,24 @@ def prepare_bookings_to_train(sessions: pd.DataFrame) -> pd.DataFrame:
         "data/users.csv",
         dtype={"id": "string", "city": "string", "postal_code": "string"},
     )
-    users["postal_prefix2"] = users["postal_code"].str.slice(0, 2)
-    user_feats = users.rename(columns={"id": "user_id", "city": "user_city"})[
-        ["user_id", "user_city", "postal_prefix2"]
-    ]
-    user_feats = user_feats.drop_duplicates(subset=["user_id"])
-    bookings = bookings.merge(user_feats, on="user_id", how="left", validate="m:1")
-    bookings["city_missing"] = bookings["user_city"].isna().astype("int8")
-    users = pd.read_csv(
-        Path("data/users.csv"),
-        usecols=["id", "city"],
-        dtype={"id": "string", "city": "string"},
-    )
 
-    user_cities = (
-        users.rename(columns={"id": "user_id", "city": "user_city"})
+    users["postal_prefix2"] = users["postal_code"].str.slice(0, 2)
+
+    user_feats = (
+        users.rename(columns={"id": "user_id", "city": "user_city"})[
+            ["user_id", "user_city", "postal_prefix2"]
+        ]
         .dropna(subset=["user_id"])
         .drop_duplicates(subset=["user_id"])
     )
 
     bookings = bookings.merge(
-        user_cities,
+        user_feats,
         on="user_id",
         how="left",
         validate="m:1",
     )
+    bookings["city_missing"] = bookings["user_city"].isna().astype("int8")
 
     bookings = bookings.drop(
         columns=[

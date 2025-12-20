@@ -25,9 +25,7 @@ for c in ["user_city", "checkin_month"]:
 pd.set_option("future.no_silent_downcasting", True)
 X = X.replace({pd.NA: np.nan}).infer_objects(copy=False)
 
-num_cols = [
-    c for c in ["lead_time_days", "lead_time_log1p", "checkin_year"] if c in X.columns
-]
+num_cols = [c for c in ["lead_time_days", "checkin_year"] if c in X.columns]
 cat_cols = [
     c
     for c in [
@@ -40,6 +38,7 @@ cat_cols = [
         "booking_dow",
         "booking_hour",
         "lead_time_bucket",
+        "city_missing",
     ]
     if c in X.columns
 ]
@@ -96,7 +95,14 @@ for name, clf in models.items():
     pipe = Pipeline([("prep", preprocess), ("clf", clf)])
     pipe.fit(X_train, y_train)
     pred = pipe.predict(X_test)
-    proba = pipe.predict_proba(X_test)[:, 1] if hasattr(clf, "predict_proba") else None
+    proba = (
+        pipe.predict_proba(X_test)[:, 1]
+        if hasattr(
+            clf,
+            "predict_proba",
+        )
+        else None
+    )
     print("\n" + "=" * 80)
     print(name)
     print(classification_report(y_test, pred, digits=4, zero_division=0))
