@@ -162,8 +162,26 @@ Stworzyliśmy dwa proste modele bazowe do przewidywania zmiennej docelowej `long
     - `lead_time_bucket`: kategoryzacja `lead_time_days` na przedziały (1,2-3,4-7,8-14,15-30,31-90,91+).
     - `city_missing`: czy miasto użytkownika jest brakujące w danych.
     - `postal_prefix2`: pierwsze dwa znaki kodu pocztowego użytkownika wyciągnięte z pliku `users.csv`.
-Model regresji logistycznej osiągnął dokładność około 51.6% oraz wartość ROC AUC około 0.505 na zbiorze testowym. Wyniki te są nieco lepsze niż model bazowy zwracający zawsze 1, ale nadal wskazują na ograniczoną zdolność rozróżniania między klasami.
+Model regresji logistycznej osiągnął dokładność około 51.6% oraz wartość ROC AUC około 0.505 na zbiorze testowym. Wyniki te są nieco lepsze niż model bazowy zwracający zawsze 1, ale nadal wskazują na ograniczoną zdolność rozróżniania między klasami. 
 
+| feature | pearson_corr | spearman_corr | mutual_info | cramers_v | chi2_p |
+|---|---:|---:|---:|---:|---:|
+| user_city | — | — | 0.005817 | 0.020729 | 9.69e-01 |
+| postal_prefix2 | 0.005759 | 0.005761 | 0.002982 | — | — |
+| checkin_year | -0.008249 | -0.012210 | 0.000397 | 0.028183 | 7.66e-08 |
+| lead_time_bucket | — | — | 0.000380 | 0.027508 | 1.07e-09 |
+| booking_hour | 0.001695 | 0.001692 | 0.000119 | 0.015417 | 7.90e-01 |
+| checkin_month | -0.002166 | -0.002148 | 0.000066 | 0.011485 | 5.18e-01 |
+| checkin_dow | 0.005197 | 0.005178 | 0.000061 | 0.011075 | 1.51e-01 |
+| booking_dow | 0.003383 | 0.003405 | 0.000056 | 0.010622 | 2.77e-01 |
+| booking_month | -0.001477 | -0.001466 | 0.000047 | 0.009668 | 8.45e-01 |
+| checkin_is_weekend | 0.005203 | 0.005203 | 0.000014 | 0.005174 | 1.51e-01 |
+| city_missing | 0.001506 | 0.001506 | 0.000001 | 0.001480 | 6.81e-01 |
+| lead_time_days | -0.006086 | -0.000548 | 0.000000 | — | — |
+Tabela: Statystyki korelacji i zależności między cechami a zmienną docelową `long_stay`. Wartości bliskie zeru wskazują na słabą lub brak zależności między cechami a celem predykcji.
+
+## Podsumowanie
+Spróbowaliśmy zbudować modele bazowe do przewidywania długoterminowych rezerwacji na podstawie tych danych które nie były wybrakowane oraz dały się połączyć na podstawie pary kluczy identyfikujących. Modele te osiągnęły jedynie nieznacznie lepsze wyniki niż proste modele bazowe, co wskazuje na ograniczoną zdolność predykcyjną dostępnych cech. Głównym wyzwaniem jest brak historycznych danych ofert w `listings.csv`, co uniemożliwia wykorzystanie potencjalnie istotnych cech ofert do trenowania modeli. Również problemem jest brak możliwości złączenia wszystkich rezerwacji z cechami ofert ze względu na niezgadzające się identyfikatory. Aby poprawić wyniki, konieczne może być pozyskanie bardziej kompletnych danych historycznych ofert oraz lepsze złączenie danych między plikami. Przydatne mogłyby się też okazać dane dotyczące konkretnych rezerwacji, skąd moglibyśmy pozyskać ceny rezerwacji i inne cechy.
 
 
 
