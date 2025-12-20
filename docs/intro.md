@@ -85,7 +85,7 @@ Model musi spełniać następujące kryteria:
 Stworzyliśmy dwa proste modele bazowe do przewidywania zmiennej docelowej `long_stay`:
 
 1. Model zwracający zawsze 1 (długoterminowa rezerwacja). Osiągnął on 52.9% dokładności, co jest zgodne z rozkładem klas w danych. Natomiast wartość ROC AUC wyniosła 0.5, co oznacza brak zdolności rozróżniania między klasami.
-2. Model oparty na regresji logistycznej wykorzystujący cechy wyłuskane tylko z pliku `sessions.csv` i `users.csv`, bez cech z `listings.csv` ze względu na problemy z danymi historycznymi. Cechy użyte w modelu regresji logistycznej to:
+2. Model oparty na regresji logistycznej wykorzystujący cechy wyłuskane tylko z pliku `sessions.csv` i `users.csv`, bez cech z `listings.csv` ze względu na problemy z aktualnością danych i złączeniami. Cechy użyte w modelu regresji logistycznej to:
     - `lead_time_days`: liczba dni między datą dokonania rezerwacji a datą zameldowania, wyliczona jako różnica między `checkin` a datą wyciągniętą z `time stamp`.
     - `checkin_month`: miesiąc zameldowania wyciągnięty z daty `checkin`.
     - `checkin_year`: rok zameldowania wyciągnięty z daty `checkin`.
