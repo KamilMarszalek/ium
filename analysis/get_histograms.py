@@ -122,13 +122,14 @@ def save_bar(
     out_png: Path,
     pdf: PdfPages | None = None,
     fig_width: float = 12,
+    fig_height: float = 5,
 ) -> None:
     counts = series.value_counts().sort_index()
     if counts.empty:
         print(f"{title}: no data")
         return
 
-    fig, ax = plt.subplots(figsize=(fig_width, 5), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), constrained_layout=True)
     counts.plot(kind="bar", ax=ax)
 
     ax.set_title(title)
@@ -280,7 +281,8 @@ def main() -> None:
                     xlabel="Kwartał ostatniego scrapingu",
                     out_png=out_dir / "listings_last_scraped.png",
                     pdf=pdf,
-                    fig_width=5,
+                    fig_width=4,
+                    fig_height=3,
                 )
 
             for col in [
