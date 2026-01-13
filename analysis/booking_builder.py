@@ -48,6 +48,8 @@ def load_listing_features(path: Path) -> pd.DataFrame:
         ]
     )
     out["price"] = price_to_float(out["price"])
+    out["min_ge_7"] = (out["minimum_nights"] >= 7).astype("int8")
+    out["max_lt_7"] = (out["maximum_nights"] < 7).astype("int8")
     return out
 
 
@@ -233,7 +235,7 @@ if __name__ == "__main__":
     bookings_prepared = prepare_bookings_to_train(
         sessions,
         user_feats,
-        amen_topk=200,
+        amen_topk=100,
     )
     bookings_prepared.to_csv(data_dir / "bookings_prepared.csv", index=False)
     print(
