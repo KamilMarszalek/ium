@@ -9,7 +9,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     average_precision_score,
-    # classification_report,
+    classification_report,
     roc_auc_score,
 )
 from sklearn.model_selection import StratifiedGroupKFold
@@ -43,6 +43,7 @@ num_cols = [
         "bathrooms",
         "minimum_nights",
         "maximum_nights",
+        "amenities_count",
     ]
     if c in X.columns
 ]
@@ -102,16 +103,26 @@ for name, clf in models.items():
     for fold, (tr, te) in enumerate(sgkf.split(X, y, groups=groups), 1):
         X_tr, X_te = X.iloc[tr], X.iloc[te]
         y_tr, y_te = y.iloc[tr], y.iloc[te]
-        print("pos rates per fold:", [round(x, 4) for x in pos_rates])
 
         pipe = Pipeline([("prep", preprocess), ("clf", clf)])
         pipe.fit(X_tr, y_tr)
 
         proba = pipe.predict_proba(X_te)[:, 1]
-        aucs.append(roc_auc_score(y_te, proba))
+        print(f"Fold {fold} classification report:")
+        print(
+            classification_report(
+                y_te,
+                pipe.predict(X_te),
+                digits=4,
+                zero_division=0,
+            )
+        )
+        auc_roc = roc_auc_score(y_te, proba)
+        print(f"Algorithm {name} Fold {fold} ROC-AUC: {auc_roc}\n")
+        aucs.append(auc_roc)
         aps.append(average_precision_score(y_te, proba))
         pos_rates.append(y_te.mean())
-
+    print("pos rates per fold:", [round(x, 4) for x in pos_rates])
     print(
         name,
         "ROC-AUC mean±std:",
