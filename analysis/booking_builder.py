@@ -45,6 +45,7 @@ def load_listing_features(path: Path) -> pd.DataFrame:
                 "maximum_nights",
                 "amenities",
                 "host_is_superhost",
+                "property_type",
             ],
         ]
     )
