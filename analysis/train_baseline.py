@@ -4,10 +4,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from get_amen_col_names import get_amen_col_names
+from preprocess import make_preprocess
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     average_precision_score,
@@ -16,7 +16,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
+from tune import tune_xgboost
 from xgboost import XGBClassifier
 
 DATA = Path("data/bookings_prepared.csv")
@@ -31,6 +31,11 @@ NUM_CANDIDATES = [
     "bathrooms",
     "minimum_nights",
     "maximum_nights",
+    "minimum_minimum_nights",
+    "maximum_minimum_nights",
+    "minimum_maximum_nights",
+    "maximum_maximum_nights",
+    "number_of_reviews",
     "amenities_count",
     # "price",
     # "lead_time_days",
@@ -44,7 +49,9 @@ CAT_CANDIDATES = [
     "min_ge_7",
     "max_lt_7",
     "host_is_superhost",
-    "property_type",
+    "host_response_time",
+    "host_response_rate",
+    # "property_type",
     # "checkin_month",
     # "checkin_dow",
     # "checkin_is_weekend",
@@ -103,32 +110,6 @@ def pick_feature_columns(X: pd.DataFrame) -> tuple[list[str], list[str]]:
         )
 
     return num_cols, cat_cols
-
-
-def make_preprocess(
-    num_cols: list[str],
-    cat_cols: list[str],
-) -> ColumnTransformer:
-    return ColumnTransformer(
-        transformers=[
-            (
-                "num",
-                Pipeline([("imputer", SimpleImputer(strategy="median"))]),
-                num_cols,
-            ),
-            (
-                "cat",
-                Pipeline(
-                    [
-                        ("imputer", SimpleImputer(strategy="most_frequent")),
-                        ("ohe", OneHotEncoder(handle_unknown="ignore")),
-                    ]
-                ),
-                cat_cols,
-            ),
-        ],
-        remainder="drop",
-    )
 
 
 def get_models() -> dict[str, object]:
@@ -239,10 +220,30 @@ def results_to_table(results: list[FoldResult]) -> pd.DataFrame:
 
 
 def main() -> None:
+    DO_TUNING = True
+
     df = load_dataset(DATA)
     X, y, groups = prepare_xyg(df)
     num_cols, cat_cols = pick_feature_columns(X)
 
+    xgb_params = {
+        "eval_metric": "logloss",
+        "n_jobs": -1,
+        "random_state": 42,
+        "n_estimators": 1000,
+    }
+
+    if DO_TUNING:
+        best_params = tune_xgboost(
+            X,
+            y,
+            groups,
+            num_cols,
+            cat_cols,
+            n_trials=50,
+        )
+        xgb_params.update(best_params)
+        xgb_params["n_estimators"] = 1000
     print("Using numeric:", num_cols)
     print("Using categorical:", cat_cols)
     print("N:", len(y), "pos_rate:", float(y.mean()))
@@ -250,6 +251,7 @@ def main() -> None:
 
     preprocess = make_preprocess(num_cols, cat_cols)
     models = get_models()
+    models["xgboost"] = XGBClassifier(**xgb_params)
 
     results = evaluate_cv(
         X,
