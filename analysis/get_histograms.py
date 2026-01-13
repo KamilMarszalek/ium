@@ -129,7 +129,10 @@ def save_bar(
         print(f"{title}: no data")
         return
 
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), constrained_layout=True)
+    fig, ax = plt.subplots(
+        figsize=(fig_width, fig_height),
+        constrained_layout=True,
+    )
     counts.plot(kind="bar", ax=ax)
 
     ax.set_title(title)
