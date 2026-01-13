@@ -27,6 +27,7 @@ def build_bookings_from_sessions(sessions: pd.DataFrame) -> pd.DataFrame:
         )
     )
     book["checkin_month"] = book["checkin"].dt.month
+    book["price"] = pd.to_numeric(sessions.get("price"), errors="coerce")
     return book
 
 
@@ -99,9 +100,15 @@ def prepare_bookings_to_train(sessions: pd.DataFrame) -> pd.DataFrame:
     return bookings
 
 
+def price_to_float(series: pd.Series) -> pd.Series:
+    s = series.astype("string")
+    s = s.str.replace(r"[^\d\.\-]", "", regex=True)
+    return pd.to_numeric(s, errors="coerce")
+
+
 if __name__ == "__main__":
     sessions_df = pd.read_csv(
-        "data/sessions_repaired.csv",
+        "data/sessions.csv",
         dtype={
             "user_id": "string",
             "listing_id": "string",
@@ -109,6 +116,31 @@ if __name__ == "__main__":
             "action": "string",
         },
     )
-
-    bookings_df = prepare_bookings_to_train(sessions_df)
-    print(f"Prepared {len(bookings_df)} bookings for training.")
+    listings_df = pd.read_csv("data/listings.csv", dtype={"id": "string"})
+    listing_feats = (
+        listings_df.rename(columns={"id": "listing_id"})
+        .dropna(subset=["listing_id"])
+        .drop_duplicates(subset=["listing_id"])
+        .loc[
+            :,
+            [
+                "listing_id",
+                "price",
+                "room_type",
+                "accommodates",
+                "bedrooms",
+                "beds",
+                "bathrooms",
+                "minimum_nights",
+                "maximum_nights",
+            ],
+        ]
+    )
+    sessions_df = sessions_df.merge(
+        listing_feats,
+        on="listing_id",
+        how="left",
+        validate="m:1",
+    )
+    sessions_df["price"] = price_to_float(sessions_df["price"])
+    prepare_bookings_to_train(sessions_df)
