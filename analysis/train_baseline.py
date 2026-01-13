@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -18,119 +19,248 @@ from sklearn.preprocessing import OneHotEncoder
 from xgboost import XGBClassifier
 
 DATA = Path("data/bookings_prepared.csv")
+TARGET = "long_stay"
+GROUP_COL = "listing_id"
+DROP_ALWAYS = {"user_id"}
 
-df = pd.read_csv(DATA)
-y = df["long_stay"].astype(int)
-groups = df["listing_id"]
-X = df.drop(columns=["long_stay", "listing_id"])
-if "user_id" in X.columns:
-    X = X.drop(columns=["user_id"])
-for c in ["user_city", "checkin_month"]:
-    if c in X.columns:
-        X[c] = X[c].astype("object")
-pd.set_option("future.no_silent_downcasting", True)
-X = X.replace({pd.NA: np.nan}).infer_objects(copy=False)
-
-num_cols = [
-    c
-    for c in [
-        # "lead_time_days",
-        # "checkin_year",
-        # "price",
-        "accommodates",
-        "bedrooms",
-        "beds",
-        "bathrooms",
-        "minimum_nights",
-        "maximum_nights",
-        "amenities_count",
-    ]
-    if c in X.columns
+NUM_CANDIDATES = [
+    "accommodates",
+    "bedrooms",
+    "beds",
+    "bathrooms",
+    "minimum_nights",
+    "maximum_nights",
+    "amenities_count",
+    # "price",
+    # "lead_time_days",
+    # "checkin_year",
 ]
-cat_cols = [
-    c
-    for c in [
-        "user_city",
-        "postal_prefix2",
-        # "checkin_month",
-        # "checkin_dow",
-        # "checkin_is_weekend",
-        # "booking_month",
-        # "booking_dow",
-        # "booking_hour",
-        # "lead_time_bucket",
-        "city_missing",
-        "room_type",
-    ]
-    if c in X.columns
+CAT_CANDIDATES = [
+    "user_city",
+    "postal_prefix2",
+    "city_missing",
+    "room_type",
+    # "checkin_month",
+    # "checkin_dow",
+    # "checkin_is_weekend",
+    # "booking_month",
+    # "booking_dow",
+    # "booking_hour",
+    # "lead_time_bucket",
 ]
 
-preprocess = ColumnTransformer(
-    transformers=[
-        (
-            "num",
-            Pipeline([("imputer", SimpleImputer(strategy="median"))]),
-            num_cols,
-        ),
-        (
-            "cat",
-            Pipeline(
-                [
-                    ("imputer", SimpleImputer(strategy="most_frequent")),
-                    ("ohe", OneHotEncoder(handle_unknown="ignore")),
-                ]
-            ),
-            cat_cols,
-        ),
-    ],
-    remainder="drop",
-)
 
-models = {
-    "dummy_most_frequent": DummyClassifier(strategy="most_frequent"),
-    "logreg": LogisticRegression(max_iter=50000, n_jobs=-1),
-    "random_forest": RandomForestClassifier(n_jobs=-1, random_state=42),
-    "xgboost": XGBClassifier(
-        # use_label_encoder=False,
-        eval_metric="logloss",
-        n_jobs=-1,
-        random_state=42,
-    ),
-}
-sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
-for name, clf in models.items():
-    aucs, aps, pos_rates = [], [], []
-    for fold, (tr, te) in enumerate(sgkf.split(X, y, groups=groups), 1):
-        X_tr, X_te = X.iloc[tr], X.iloc[te]
-        y_tr, y_te = y.iloc[tr], y.iloc[te]
+@dataclass(frozen=True)
+class FoldResult:
+    model: str
+    fold: int
+    roc_auc: float
+    pr_auc: float
+    pos_rate: float
 
-        pipe = Pipeline([("prep", preprocess), ("clf", clf)])
-        pipe.fit(X_tr, y_tr)
 
-        proba = pipe.predict_proba(X_te)[:, 1]
-        print(f"Fold {fold} classification report:")
-        print(
-            classification_report(
-                y_te,
-                pipe.predict(X_te),
-                digits=4,
-                zero_division=0,
-            )
+def load_dataset(path: Path) -> pd.DataFrame:
+    return pd.read_csv(path)
+
+
+def prepare_xyg(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
+    if TARGET not in df.columns:
+        raise ValueError(f"Missing target column: {TARGET}")
+    if GROUP_COL not in df.columns:
+        raise ValueError(f"Missing group column: {GROUP_COL}")
+
+    y = df[TARGET].astype(int)
+    groups = df[GROUP_COL]
+
+    X = df.drop(columns=[TARGET, GROUP_COL]).copy()
+
+    for col in DROP_ALWAYS:
+        if col in X.columns:
+            X = X.drop(columns=[col])
+
+    pd.set_option("future.no_silent_downcasting", True)
+    X = X.replace({pd.NA: np.nan}).infer_objects(copy=False)
+    for c in CAT_CANDIDATES:
+        if c in X.columns:
+            X[c] = X[c].astype("object")
+
+    return X, y, groups
+
+
+def pick_feature_columns(X: pd.DataFrame) -> tuple[list[str], list[str]]:
+    num_cols = [c for c in NUM_CANDIDATES if c in X.columns]
+    cat_cols = [c for c in CAT_CANDIDATES if c in X.columns]
+
+    if not num_cols and not cat_cols:
+        raise ValueError(
+            "No features selected. Check NUM_CANDIDATES/CAT_CANDIDATES.",
         )
-        auc_roc = roc_auc_score(y_te, proba)
-        print(f"Algorithm {name} Fold {fold} ROC-AUC: {auc_roc}\n")
-        aucs.append(auc_roc)
-        aps.append(average_precision_score(y_te, proba))
-        pos_rates.append(y_te.mean())
-    print("pos rates per fold:", [round(x, 4) for x in pos_rates])
-    print(
-        name,
-        "ROC-AUC mean±std:",
-        np.mean(aucs),
-        np.std(aucs),
-        "PR-AUC mean±std:",
-        np.mean(aps),
-        np.std(aps),
-        "test pos rate mean:",
-        np.mean(pos_rates),
+
+    return num_cols, cat_cols
+
+
+def make_preprocess(
+    num_cols: list[str],
+    cat_cols: list[str],
+) -> ColumnTransformer:
+    return ColumnTransformer(
+        transformers=[
+            (
+                "num",
+                Pipeline([("imputer", SimpleImputer(strategy="median"))]),
+                num_cols,
+            ),
+            (
+                "cat",
+                Pipeline(
+                    [
+                        ("imputer", SimpleImputer(strategy="most_frequent")),
+                        ("ohe", OneHotEncoder(handle_unknown="ignore")),
+                    ]
+                ),
+                cat_cols,
+            ),
+        ],
+        remainder="drop",
     )
+
+
+def get_models() -> dict[str, object]:
+    return {
+        "dummy_most_frequent": DummyClassifier(strategy="most_frequent"),
+        "logreg": LogisticRegression(max_iter=50000, n_jobs=-1),
+        "random_forest": RandomForestClassifier(n_jobs=-1, random_state=42),
+        "xgboost": XGBClassifier(
+            eval_metric="logloss",
+            n_jobs=-1,
+            random_state=42,
+        ),
+    }
+
+
+def evaluate_cv(
+    X: pd.DataFrame,
+    y: pd.Series,
+    groups: pd.Series,
+    preprocess: ColumnTransformer,
+    models: dict[str, object],
+    *,
+    n_splits: int = 5,
+    random_state: int = 42,
+    print_reports: bool = True,
+) -> list[FoldResult]:
+    sgkf = StratifiedGroupKFold(
+        n_splits=n_splits, shuffle=True, random_state=random_state
+    )
+
+    results: list[FoldResult] = []
+
+    for model_name, clf in models.items():
+        aucs, aps, pos_rates = [], [], []
+
+        for fold, (tr, te) in enumerate(sgkf.split(X, y, groups=groups), 1):
+            X_tr, X_te = X.iloc[tr], X.iloc[te]
+            y_tr, y_te = y.iloc[tr], y.iloc[te]
+
+            pipe = Pipeline([("prep", preprocess), ("clf", clf)])
+            pipe.fit(X_tr, y_tr)
+
+            proba = pipe.predict_proba(X_te)[:, 1]
+            pred = pipe.predict(X_te)
+
+            roc = roc_auc_score(y_te, proba)
+            pr = average_precision_score(y_te, proba)
+            pos = float(y_te.mean())
+
+            results.append(
+                FoldResult(
+                    model=model_name,
+                    fold=fold,
+                    roc_auc=roc,
+                    pr_auc=pr,
+                    pos_rate=pos,
+                )
+            )
+            aucs.append(roc)
+            aps.append(pr)
+            pos_rates.append(pos)
+
+            if print_reports:
+                print(f"\n{'=' * 80}\n{model_name} — fold {fold}")
+                print(
+                    classification_report(
+                        y_te,
+                        pred,
+                        digits=4,
+                        zero_division=0,
+                    )
+                )
+                print(
+                    f"ROC-AUC: {roc:.6f}  PR-AUC: {pr:.6f}  pos_rate: {pos:.4f}",
+                )
+
+        print(f"\n{model_name} summary")
+        print("pos rates per fold:", [round(x, 4) for x in pos_rates])
+        print(
+            "ROC-AUC mean±std:",
+            float(np.mean(aucs)),
+            float(np.std(aucs)),
+            "PR-AUC mean±std:",
+            float(np.mean(aps)),
+            float(np.std(aps)),
+            "test pos rate mean:",
+            float(np.mean(pos_rates)),
+        )
+
+    return results
+
+
+def results_to_table(results: list[FoldResult]) -> pd.DataFrame:
+    df = pd.DataFrame([r.__dict__ for r in results])
+    summary = (
+        df.groupby("model")
+        .agg(
+            roc_auc_mean=("roc_auc", "mean"),
+            roc_auc_std=("roc_auc", "std"),
+            pr_auc_mean=("pr_auc", "mean"),
+            pr_auc_std=("pr_auc", "std"),
+            pos_rate_mean=("pos_rate", "mean"),
+        )
+        .reset_index()
+        .sort_values("roc_auc_mean", ascending=False)
+    )
+    return summary
+
+
+def main() -> None:
+    df = load_dataset(DATA)
+    X, y, groups = prepare_xyg(df)
+    num_cols, cat_cols = pick_feature_columns(X)
+
+    print("Using numeric:", num_cols)
+    print("Using categorical:", cat_cols)
+    print("N:", len(y), "pos_rate:", float(y.mean()))
+    print("Unique groups:", int(groups.nunique()))
+
+    preprocess = make_preprocess(num_cols, cat_cols)
+    models = get_models()
+
+    results = evaluate_cv(
+        X,
+        y,
+        groups,
+        preprocess,
+        models,
+        n_splits=5,
+        random_state=42,
+        print_reports=True,
+    )
+
+    summary = results_to_table(results)
+    print("\n" + "=" * 80)
+    print("CV summary (mean±std)")
+    print(summary.to_string(index=False))
+
+
+if __name__ == "__main__":
+    main()
