@@ -233,7 +233,7 @@ if __name__ == "__main__":
     bookings_prepared = prepare_bookings_to_train(
         sessions,
         user_feats,
-        amen_topk=100,
+        amen_topk=200,
     )
     bookings_prepared.to_csv(data_dir / "bookings_prepared.csv", index=False)
     print(

@@ -130,7 +130,7 @@ def make_preprocess(
 def get_models() -> dict[str, object]:
     return {
         "dummy_most_frequent": DummyClassifier(strategy="most_frequent"),
-        "logreg": LogisticRegression(max_iter=50000, n_jobs=-1),
+        "logreg": LogisticRegression(max_iter=10000, n_jobs=-1),
         "random_forest": RandomForestClassifier(n_jobs=-1, random_state=42),
         "xgboost": XGBClassifier(
             eval_metric="logloss",
