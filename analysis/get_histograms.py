@@ -246,7 +246,10 @@ def main() -> None:
         if "lead_time_days" in bookings.columns:
             save_hist(
                 bookings["lead_time_days"],
-                title="Rozkład liczby dni wyprzedzenia rezerwacji dla book_listing",
+                title="""
+                    Rozkład liczby dni wyprzedzenia rezerwacji
+                    dla book_listing
+                """,
                 xlabel="Liczba dni wyprzedzenia rezerwacji",
                 out_png=out_dir / "bookings_lead_time_days.png",
                 pdf=pdf,
@@ -267,7 +270,11 @@ def main() -> None:
                 )
                 save_hist(
                     (price + 1).apply(
-                        lambda x: None if pd.isna(x) else __import__("math").log10(x)
+                        lambda x: None
+                        if pd.isna(x)
+                        else __import__(
+                            "math",
+                        ).log10(x)
                     ),
                     title="Rozkład log10(price + 1) w listings.csv",
                     xlabel="log10(price + 1)",
