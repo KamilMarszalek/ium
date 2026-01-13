@@ -211,3 +211,4 @@ data/*
 !data/*.*
 data/*/
 
+plots/*
