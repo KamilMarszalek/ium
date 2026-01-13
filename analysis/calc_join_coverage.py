@@ -42,8 +42,8 @@ def main(args: list[str]) -> None:
     left_col, right_col = args[2].split(",")
     df_left = pd.read_csv(left_path, dtype={left_col: "string"})
     df_right = pd.read_csv(right_path, dtype={right_col: "string"})
-    # if "action" in df_left.columns:
-    #     df_left = df_left[df_left["action"] == "book_listing"]
+    if "action" in df_left.columns:
+        df_left = df_left[df_left["action"] == "book_listing"]
     coverage = join_coverage_report(df_left, df_right, [left_col], [right_col])
     print(coverage)
 
