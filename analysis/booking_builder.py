@@ -46,6 +46,13 @@ def load_listing_features(path: Path) -> pd.DataFrame:
                 "amenities",
                 "host_is_superhost",
                 "property_type",
+                "minimum_minimum_nights",
+                "maximum_minimum_nights",
+                "minimum_maximum_nights",
+                "maximum_maximum_nights",
+                "number_of_reviews",
+                "host_response_time",
+                "host_response_rate",
             ],
         ]
     )
