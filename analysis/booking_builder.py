@@ -87,7 +87,6 @@ def prepare_bookings_to_train(sessions: pd.DataFrame) -> pd.DataFrame:
             "checkin_quarter",
             "user_id",
             "timestamp",
-            "listing_id",
             "booking_date",
             "booking_duration",
             "booking_id",
