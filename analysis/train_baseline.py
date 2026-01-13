@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from get_amen_col_names import get_amen_col_names
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -90,6 +91,7 @@ def prepare_xyg(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
 def pick_feature_columns(X: pd.DataFrame) -> tuple[list[str], list[str]]:
     num_cols = [c for c in NUM_CANDIDATES if c in X.columns]
     cat_cols = [c for c in CAT_CANDIDATES if c in X.columns]
+    cat_cols.extend(get_amen_col_names(X))
 
     if not num_cols and not cat_cols:
         raise ValueError(
