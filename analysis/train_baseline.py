@@ -41,6 +41,8 @@ CAT_CANDIDATES = [
     "postal_prefix2",
     "city_missing",
     "room_type",
+    "min_ge_7",
+    "max_lt_7",
     # "checkin_month",
     # "checkin_dow",
     # "checkin_is_weekend",
@@ -130,7 +132,7 @@ def make_preprocess(
 def get_models() -> dict[str, object]:
     return {
         "dummy_most_frequent": DummyClassifier(strategy="most_frequent"),
-        "logreg": LogisticRegression(max_iter=10000, n_jobs=-1),
+        "logreg": LogisticRegression(max_iter=1000, n_jobs=-1),
         "random_forest": RandomForestClassifier(n_jobs=-1, random_state=42),
         "xgboost": XGBClassifier(
             eval_metric="logloss",
