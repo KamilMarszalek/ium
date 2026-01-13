@@ -43,6 +43,7 @@ CAT_CANDIDATES = [
     "room_type",
     "min_ge_7",
     "max_lt_7",
+    "host_is_superhost",
     # "checkin_month",
     # "checkin_dow",
     # "checkin_is_weekend",
