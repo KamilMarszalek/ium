@@ -12,7 +12,17 @@ def make_preprocess(
         transformers=[
             (
                 "num",
-                Pipeline([("imputer", SimpleImputer(strategy="median"))]),
+                Pipeline(
+                    [
+                        (
+                            "imputer",
+                            SimpleImputer(
+                                strategy="median",
+                                add_indicator=True,
+                            ),
+                        )
+                    ]
+                ),
                 num_cols,
             ),
             (
