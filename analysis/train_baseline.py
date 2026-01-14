@@ -40,7 +40,6 @@ NUM_CANDIDATES = [
     "amenities_count",
     "host_response_rate",
     "host_acceptance_rate",
-    "price",
     # "lead_time_days",
     # "checkin_year",
 ] + review_features
