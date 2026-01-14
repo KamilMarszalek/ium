@@ -4,12 +4,19 @@ import re
 from pathlib import Path
 
 import pandas as pd
+from features import host_features, listing_features, night_limit_cols, review_features
 from parse_amenities_cell import parse_amenities_cell
 
 
 def price_to_float(series: pd.Series) -> pd.Series:
     s = series.astype("string")
     s = s.str.replace(r"[^\d\.\-]", "", regex=True)
+    return pd.to_numeric(s, errors="coerce")
+
+
+def cut_percent_signs(series: pd.Series) -> pd.Series:
+    s = series.astype("string")
+    s = s.str.replace(r"[%]", "", regex=True)
     return pd.to_numeric(s, errors="coerce")
 
 
@@ -33,32 +40,24 @@ def load_listing_features(path: Path) -> pd.DataFrame:
         .drop_duplicates(subset=["listing_id"])
         .loc[
             :,
-            [
-                "listing_id",
-                "price",
-                "room_type",
-                "accommodates",
-                "bedrooms",
-                "beds",
-                "bathrooms",
-                "minimum_nights",
-                "maximum_nights",
-                "amenities",
-                "host_is_superhost",
-                "property_type",
-                "minimum_minimum_nights",
-                "maximum_minimum_nights",
-                "minimum_maximum_nights",
-                "maximum_maximum_nights",
-                "number_of_reviews",
-                "host_response_time",
-                "host_response_rate",
-            ],
+            listing_features + night_limit_cols + host_features + review_features,
         ]
     )
     out["price"] = price_to_float(out["price"])
-    out["min_ge_7"] = (out["minimum_nights"] >= 7).astype("int8")
-    out["max_lt_7"] = (out["maximum_nights"] < 7).astype("int8")
+    out["host_response_rate"] = cut_percent_signs(out["host_response_rate"])
+    out["host_acceptance_rate"] = cut_percent_signs(out["host_acceptance_rate"])
+    out["min_ge_7"] = (out["minimum_nights"] >= 7).fillna(False).astype("int8")
+    out["max_lt_7"] = (out["maximum_nights"] < 7).fillna(False).astype("int8")
+    out["bath_is_shared"] = (
+        (out["bathrooms_text"].astype("string").str.contains("shared", case=False))
+        .fillna(False)
+        .astype("int8")
+    )
+    out["bath_is_private"] = (
+        (out["bathrooms_text"].astype("string").str.contains("private", case=False))
+        .fillna(False)
+        .astype("int8")
+    )
     return out
 
 
@@ -222,7 +221,6 @@ def prepare_bookings_to_train(
         how="left",
         validate="m:1",
     )
-    bookings["city_missing"] = bookings["user_city"].isna().astype("int8")
 
     bookings = encode_amenities_topk(bookings, k=amen_topk)
 
@@ -244,7 +242,7 @@ if __name__ == "__main__":
     bookings_prepared = prepare_bookings_to_train(
         sessions,
         user_feats,
-        amen_topk=100,
+        amen_topk=50,
     )
     bookings_prepared.to_csv(data_dir / "bookings_prepared.csv", index=False)
     print(
