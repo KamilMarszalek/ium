@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from features import review_features
 from get_amen_col_names import get_amen_col_names
 from preprocess import make_preprocess
 from sklearn.compose import ColumnTransformer
@@ -37,20 +38,21 @@ NUM_CANDIDATES = [
     "maximum_maximum_nights",
     "number_of_reviews",
     "amenities_count",
-    # "price",
+    "host_response_rate",
+    "host_acceptance_rate",
+    "price",
     # "lead_time_days",
     # "checkin_year",
-]
+] + review_features
 CAT_CANDIDATES = [
-    "user_city",
-    "postal_prefix2",
-    "city_missing",
     "room_type",
     "min_ge_7",
     "max_lt_7",
     "host_is_superhost",
     "host_response_time",
-    "host_response_rate",
+    "bath_is_shared",
+    "bath_is_private",
+    "instant_bookable",
     # "property_type",
     # "checkin_month",
     # "checkin_dow",
@@ -230,7 +232,7 @@ def main() -> None:
         "eval_metric": "logloss",
         "n_jobs": -1,
         "random_state": 42,
-        "n_estimators": 1000,
+        "n_estimators": 100,
     }
 
     if DO_TUNING:
@@ -240,10 +242,10 @@ def main() -> None:
             groups,
             num_cols,
             cat_cols,
-            n_trials=20,
+            n_trials=15,
         )
         xgb_params.update(best_params)
-        xgb_params["n_estimators"] = 1000
+        xgb_params["n_estimators"] = 100
     print("Using numeric:", num_cols)
     print("Using categorical:", cat_cols)
     print("N:", len(y), "pos_rate:", float(y.mean()))
