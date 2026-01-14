@@ -240,7 +240,7 @@ def main() -> None:
             groups,
             num_cols,
             cat_cols,
-            n_trials=50,
+            n_trials=20,
         )
         xgb_params.update(best_params)
         xgb_params["n_estimators"] = 1000
