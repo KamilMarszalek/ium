@@ -154,8 +154,8 @@ zależności od typu oferty).
 Do walidacji zastosowano podział krzyżowy z grupowaniem po `listing_id`. Celem
 tego wyboru było ograniczenie sytuacji, w której ta sama oferta pojawia się
 jednocześnie w zbiorze treningowym i testowym, co mogłoby sztucznie zawyżać
-wyniki. Gdybyśmy mieli do dyspozycji dane z kolejnych lat, rozważylibyśmy walidację
-czasową, ale w obecnym zbiorze danych nie było takiej możliwości.
+wyniki. Gdybyśmy mieli do dyspozycji dane z kolejnych lat, rozważylibyśmy
+walidację czasową, ale w obecnym zbiorze danych nie było takiej możliwości.
 
 Do oceny jakości użyto metryk rankingowych odpornych na niezbalansowanie klas:
 ROC-AUC oraz PR-AUC, a dodatkowo raportowano metryki takie jak
