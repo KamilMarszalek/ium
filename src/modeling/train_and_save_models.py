@@ -1,7 +1,5 @@
 import joblib
-from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from xgboost import XGBClassifier
 
 from src.modeling.preprocess import make_preprocess
 from src.modeling.train_baseline import (
