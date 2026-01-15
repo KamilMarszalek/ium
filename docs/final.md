@@ -27,6 +27,12 @@ W praktyce oznaczało to wykorzystanie głównie:
 - cech oferty z `listings.csv`, które opisują standard i warunki pobytu,
 - udogodnień (amenities), ponieważ są bezpośrednio „wdrażalne”.
 
+Sprawdziliśmy, że obecnie w kluczowych atrybutach albo nie ma braków danych, albo
+są one nieliczne i można je uzupełnić prostymi metodami (np. medianą lub
+najczęstszą wartością).
+
+Zauważyliśmy, również, że w porównaniu do poprzedniego zbioru danych, jesteśmy w stanie złączyć rezerwacje z cechami ofert (`join_coverage` wzrosło do 100%).
+
 ### 2.1 Dane rezerwacji (podstawa do targetu)
 
 Target `long_stay` został zbudowany na podstawie różnicy pomiędzy datą
@@ -83,7 +89,10 @@ może odzwierciedlać stan rynku i decyzje hostów z przyszłości (np. po wzro�
 popytu lub po zmianach strategii), których nie było w momencie rezerwacji. W
 takim przypadku model uczy się sygnału dostępnego dopiero po czasie.
 
-Z tego powodu `price` został wykluczony z cech wejściowych.
+Z tego powodu `price` został wykluczony z cech wejściowych, pomimo, że jest najbardziej skorelowany z przewidywanym targetem.
+Wykorzystanie samego atrybytu `price` dawało bardzo wysokie wyniki, ale
+model byłby bezużyteczny w praktyce. Niewątpliwie wykorzystalibyśmy ten sygnał, gdybyśmy mieli dostęp do historycznych cen odpowiadających każdej rezerwacji.
+Dla potencjalnych gości cena często jest najistotniejszym czynnikiem decyzyjnym.
 
 ### 3.2 Dane personalne użytkownika
 
@@ -114,6 +123,11 @@ Zbudowano dwa modele:
 - model bazowy: regresja logistyczna,
 - model docelowy: XGBoost.
 
+Oba modele są trenowane jako pipeline składający się z dwóch etapów: 
+- preprocessingu, 
+- treningu klasyfikatora. 
+Dla cech numerycznych zastosowano imputację medianą oraz dodanie wskaźnika braków. Dla cech kategorycznych zastosowano imputację wartością najczęstszą i kodowanie One-Hot z ignorowaniem nieznanych kategorii w predykcji (handle_unknown="ignore"). Pozwala to stabilnie obsługiwać braki danych oraz nowe kategorie w danych testowych/produkcyjnych.
+
 Regresja logistyczna daje prosty punkt odniesienia i łatwo ją interpretować.
 XGBoost jest bardziej elastyczny i może uchwycić nieliniowe zależności oraz
 interakcje między cechami (np. udogodnienia mogą mieć inne znaczenie w
@@ -123,6 +137,10 @@ Do walidacji zastosowano podział krzyżowy z grupowaniem po `listing_id`. Celem
 tego wyboru było ograniczenie sytuacji, w której ta sama oferta pojawia się
 jednocześnie w zbiorze treningowym i testowym, co mogłoby sztucznie zawyżać
 wyniki.
+
+Do oceny jakości użyto metryk rankingowych odpornych na niezbalansowanie klas: ROC-AUC oraz PR-AUC, a dodatkowo raportowano metryki takie jak precision/recall/F1 dla wybranego progu decyzyjnego. PR-AUC jest szczególnie informatywne przy relatywnie rzadszej klasie pozytywnej (u nas ok. 28%). W eksperymentach porównano także model naiwny zwracający klasę częstościową jako punkt odniesienia.
+
+Dla XGBoost wykonano automatyczne strojenie hiperparametrów metodami bayesowskimi (pakiet Optuna). Funkcją celu była średnia ROC-AUC z 5-krotnej walidacji krzyżowej z grupowaniem po listing_id. Strojenie obejmowało m.in. max_depth, min_child_weight, subsample, colsample_bytree, regularyzację (reg_alpha, reg_lambda) oraz wagę klasy pozytywnej (scale_pos_weight). Użyto early_stopping_rounds, aby ograniczyć przeuczenie w trakcie treningu boostingowego.
 
 ## 5. Ograniczenia obecnego podejścia
 
