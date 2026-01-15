@@ -116,6 +116,16 @@ liczba wyświetleń, liczba kliknięć). Takie sygnały mogą być przydatne do
 segmentacji lub analiz marketingowych, ale w tym projekcie priorytetem były
 cechy oferty, które są bezpośrednio modyfikowalne przez właściciela.
 
+### 3.5 Cechy tekstowe z `listings.csv`
+W `listings.csv` są pola tekstowe (np. `description`, `neighborhood_overview`),
+które potencjalnie mogą zawierać sygnały istotne dla dłuższego pobytu (np.
+bliskość atrakcji, charakter okolicy). Podjęliśmy próbe ich wykorzystania
+poprzez zbudowanie embeddingów, a następnie pogrupowanie obiektów do odpowiednich 
+klastrów. Wstępne eksperymenty nie wykazały jednak istotnej poprawy wyników
+modelu. Cechy uzyskane w ten sposób niosły słaby sygnał względem klasy docelowej,
+były trudne do interpretacji i nie przekładały się na praktyczne rekomendacje
+dla właścicieli. Z tego powodu zrezygnowano z ich użycia w finalnym modelu.
+
 ## 4. Modele i walidacja
 
 Zbudowano dwa modele:
