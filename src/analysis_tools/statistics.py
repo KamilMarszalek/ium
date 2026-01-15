@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.stats import chi2_contingency
 from sklearn.feature_selection import mutual_info_classif
 
-from utils.constants import DATA, TARGET
+from src.utils.constants import DATA, TARGET
 
 
 def cramers_v(
