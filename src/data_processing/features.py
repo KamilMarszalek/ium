@@ -15,7 +15,6 @@ listing_features = [
     "amenities",
     "property_type",
     "instant_bookable",
-    # "segment_id",
 ]
 
 night_limit_cols = [

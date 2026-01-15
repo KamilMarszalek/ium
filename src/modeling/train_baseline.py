@@ -38,7 +38,6 @@ NUM_CANDIDATES = [
     "amenities_count",
     "host_response_rate",
     "host_acceptance_rate",
-    "segment_id",
 ] + review_features
 CAT_CANDIDATES = [
     "room_type",
@@ -49,7 +48,6 @@ CAT_CANDIDATES = [
     "bath_is_shared",
     "bath_is_private",
     "instant_bookable",
-    "segment_id",
     "property_type",
 ]
 
