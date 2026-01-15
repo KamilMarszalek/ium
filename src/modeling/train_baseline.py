@@ -182,18 +182,19 @@ def evaluate_cv(config: CVConvig) -> list[FoldResult]:
                     f"ROC-AUC: {roc:.6f}  PR-AUC: {pr:.6f}  pos_rate: {pos:.4f}",
                 )
 
-        print(f"\n{model_name} summary")
-        print("pos rates per fold:", [round(x, 4) for x in pos_rates])
-        print(
-            "ROC-AUC mean±std:",
-            float(np.mean(aucs)),
-            float(np.std(aucs)),
-            "PR-AUC mean±std:",
-            float(np.mean(aps)),
-            float(np.std(aps)),
-            "test pos rate mean:",
-            float(np.mean(pos_rates)),
-        )
+        if config.print_reports:
+            print(f"\n{model_name} summary")
+            print("pos rates per fold:", [round(x, 4) for x in pos_rates])
+            print(
+                "ROC-AUC mean±std:",
+                float(np.mean(aucs)),
+                float(np.std(aucs)),
+                "PR-AUC mean±std:",
+                float(np.mean(aps)),
+                float(np.std(aps)),
+                "test pos rate mean:",
+                float(np.mean(pos_rates)),
+            )
 
     return results
 
@@ -254,10 +255,11 @@ class BaselineTrainer:
             xgb_params.update(best_params)
             xgb_params["n_estimators"] = 100
 
-        print("Using numeric:", num_cols)
-        print("Using categorical:", cat_cols)
-        print("N:", len(y), "pos_rate:", float(y.mean()))
-        print("Unique groups:", int(groups.nunique()))
+        if self.config.print_reports:
+            print("Using numeric:", num_cols)
+            print("Using categorical:", cat_cols)
+            print("N:", len(y), "pos_rate:", float(y.mean()))
+            print("Unique groups:", int(groups.nunique()))
 
         preprocess = make_preprocess(num_cols, cat_cols)
         models = get_models()
