@@ -1,6 +1,8 @@
 import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from xgboost import XGBClassifier
+
 from src.modeling.preprocess import make_preprocess
 from src.modeling.train_baseline import (
     DATA,
@@ -9,7 +11,7 @@ from src.modeling.train_baseline import (
     prepare_xyg,
 )
 from src.utils.constants import MODEL_A_PATH, MODEL_B_PATH, MODELS_DIR
-from xgboost import XGBClassifier
+from src.utils.models import get_models
 
 
 def main() -> None:
@@ -18,13 +20,9 @@ def main() -> None:
     num_cols, cat_cols = pick_feature_columns(X)
 
     preprocess = make_preprocess(num_cols, cat_cols)
-
-    model_a = LogisticRegression(max_iter=1000, n_jobs=-1)
-    model_b = XGBClassifier(
-        eval_metric="logloss",
-        n_jobs=-1,
-        random_state=42,
-    )
+    models = get_models()
+    model_a = models["logreg"]
+    model_b = models["xgboost"]
 
     pipe_a = Pipeline([("prep", preprocess), ("clf", model_a)])
     pipe_b = Pipeline([("prep", preprocess), ("clf", model_b)])

@@ -4,8 +4,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.dummy import DummyClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     average_precision_score,
     classification_report,
@@ -20,6 +18,7 @@ from src.data_processing.features import get_amen_col_names, review_features
 from src.modeling.preprocess import make_preprocess
 from src.modeling.tune import XGBoostTuneConfig, tune_xgboost
 from src.utils.constants import DATA, TARGET
+from src.utils.models import get_models
 
 GROUP_COL = "listing_id"
 DROP_ALWAYS = {"user_id"}
@@ -115,18 +114,6 @@ def pick_feature_columns(X: pd.DataFrame) -> tuple[list[str], list[str]]:
         )
 
     return num_cols, cat_cols
-
-
-def get_models() -> dict[str, object]:
-    return {
-        "dummy_most_frequent": DummyClassifier(strategy="most_frequent"),
-        "logreg": LogisticRegression(max_iter=1000, n_jobs=-1),
-        "xgboost": XGBClassifier(
-            eval_metric="logloss",
-            n_jobs=-1,
-            random_state=42,
-        ),
-    }
 
 
 def evaluate_cv(config: CVConvig) -> list[FoldResult]:
