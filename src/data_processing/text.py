@@ -1,16 +1,3 @@
-uv run analysis/build_text.py 
-Batches: 100%|█████████████████████████████████████████████████████████████████████| 2/2 [00:01<00:00,  1.73it/s]
-[cache] saved embeddings: (7586, 384) to data/listings_text_emb.npz
-[pca] X_red shape: (7586, 50)
-[segments] counts:
-segment_id
--1    7586
-[segments] HDBSCAN noise fraction: 1.0
-[saved] data/listing_segments.csv rows=7586
-
-
-
-
 import argparse
 import re
 from pathlib import Path
@@ -36,14 +23,14 @@ def _clean_text(s: pd.Series) -> pd.Series:
 
 def build_text(listings: pd.DataFrame) -> pd.Series:
     text_cols = [
-        "name",
-        "description",
-        "neighborhood_overview",
-        "host_about",
-        "bathrooms_text",
+        # "name",
+        # "description",
+        # "neighborhood_overview",
+        # "host_about",
+        # "bathrooms_text",
         "amenities",
-        "property_type",
-        "room_type",
+        # "property_type",
+        # "room_type",
     ]
 
     parts: list[pd.Series] = []
@@ -200,7 +187,7 @@ def main() -> None:
     texts = build_text(listings)
     X_emb: np.ndarray
     if args.emb_cache.exists():
-        cache = np.load(args.emb_cache, allow_pickle=False)
+        cache = np.load(args.emb_cache, allow_pickle=True)
         cached_ids = cache["listing_id"].astype(str)
         if np.array_equal(
             cached_ids,
