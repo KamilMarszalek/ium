@@ -126,7 +126,7 @@ Zbudowano dwa modele:
 Oba modele są trenowane jako pipeline składający się z dwóch etapów: 
 - preprocessingu, 
 - treningu klasyfikatora. 
-Dla cech numerycznych zastosowano imputację medianą oraz dodanie wskaźnika braków. Dla cech kategorycznych zastosowano imputację wartością najczęstszą i kodowanie One-Hot z ignorowaniem nieznanych kategorii w predykcji (handle_unknown="ignore"). Pozwala to stabilnie obsługiwać braki danych oraz nowe kategorie w danych testowych/produkcyjnych.
+Dla cech numerycznych zastosowano imputację medianą oraz dodanie wskaźnika braków. Dla cech kategorycznych zastosowano imputację wartością najczęstszą i kodowanie One-Hot. Pozwala to stabilnie obsługiwać braki danych oraz nowe kategorie w danych testowych/produkcyjnych.
 
 Regresja logistyczna daje prosty punkt odniesienia i łatwo ją interpretować.
 XGBoost jest bardziej elastyczny i może uchwycić nieliniowe zależności oraz
