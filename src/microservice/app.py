@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import hashlib
 import json
 import uuid
@@ -9,9 +7,9 @@ from typing import Any
 import joblib
 import pandas as pd
 from fastapi import FastAPI
-from project_paths import AB_LOG_PATH, MODEL_A_PATH, MODEL_B_PATH
 from pydantic import BaseModel
 from sklearn.pipeline import Pipeline
+from src.utils.constants import AB_LOG_PATH, MODEL_A_PATH, MODEL_B_PATH
 
 AB_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 

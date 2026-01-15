@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 import json
 
 import pandas as pd
-from project_paths import AB_LOG_PATH
 from sklearn.metrics import average_precision_score, roc_auc_score
+from src.utils.constants import AB_LOG_PATH
 
 if not AB_LOG_PATH.exists():
     raise SystemExit(f"Missing log file: {AB_LOG_PATH}")
@@ -14,8 +12,10 @@ rows = [
 ]
 df = pd.DataFrame(rows)
 
-pred = df[df["event"] == "predict"][["request_id", "variant", "model", "prob"]]
-fb = df[df["event"] == "feedback"][["request_id", "true"]]
+pred: pd.DataFrame = df.loc[
+    df["event"] == "predict", ["request_id", "variant", "model", "prob"]
+]
+fb: pd.DataFrame = df.loc[df["event"] == "feedback", ["request_id", "true"]]
 
 m = pred.merge(fb, on="request_id", how="inner")
 for v in ["A", "B"]:

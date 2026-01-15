@@ -1,25 +1,15 @@
-from __future__ import annotations
-
-import sys
-from pathlib import Path
-
 import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from xgboost import XGBClassifier
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
-from preprocess import make_preprocess  # noqa: E402
-from project_paths import MODEL_A_PATH, MODEL_B_PATH, MODELS_DIR  # noqa: E402
-from train_baseline import (  # noqa: E402
+from src.modeling.preprocess import make_preprocess
+from src.modeling.train_baseline import (
     DATA,
     load_dataset,
     pick_feature_columns,
     prepare_xyg,
 )
+from src.utils.constants import MODEL_A_PATH, MODEL_B_PATH, MODELS_DIR
+from xgboost import XGBClassifier
 
 
 def main() -> None:

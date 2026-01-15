@@ -3,9 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from features import review_features
-from get_amen_col_names import get_amen_col_names
-from preprocess import make_preprocess
+import src.utils.pandas as pandas_utils
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -17,11 +15,13 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
-from tune import tune_xgboost
+from src.data_processing.features import get_amen_col_names, review_features
+from src.modeling.preprocess import make_preprocess
+from src.modeling.tune import XGBoostTuneConfig, tune_xgboost
 from xgboost import XGBClassifier
 
-DATA = Path("data/bookings_prepared.csv")
-TARGET = "long_stay"
+from utils.constants import DATA, TARGET
+
 GROUP_COL = "listing_id"
 DROP_ALWAYS = {"user_id"}
 
@@ -72,6 +72,18 @@ class FoldResult:
     pos_rate: float
 
 
+@dataclass(frozen=True)
+class CVConvig:
+    X: pd.DataFrame
+    y: pd.Series
+    groups: pd.Series
+    preprocess: ColumnTransformer
+    models: dict[str, object]
+    n_splits: int = 5
+    random_state: int = 42
+    print_reports: bool = True
+
+
 def load_dataset(path: Path) -> pd.DataFrame:
     return pd.read_csv(path)
 
@@ -82,8 +94,8 @@ def prepare_xyg(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     if GROUP_COL not in df.columns:
         raise ValueError(f"Missing group column: {GROUP_COL}")
 
-    y = df[TARGET].astype(int)
-    groups = df[GROUP_COL]
+    y: pd.Series = pandas_utils.require_series(df, TARGET)
+    groups: pd.Series = pandas_utils.require_series(df, GROUP_COL)
 
     X = df.drop(columns=[TARGET, GROUP_COL]).copy()
 
@@ -126,31 +138,22 @@ def get_models() -> dict[str, object]:
     }
 
 
-def evaluate_cv(
-    X: pd.DataFrame,
-    y: pd.Series,
-    groups: pd.Series,
-    preprocess: ColumnTransformer,
-    models: dict[str, object],
-    *,
-    n_splits: int = 5,
-    random_state: int = 42,
-    print_reports: bool = True,
-) -> list[FoldResult]:
+def evaluate_cv(config: CVConvig) -> list[FoldResult]:
     sgkf = StratifiedGroupKFold(
-        n_splits=n_splits, shuffle=True, random_state=random_state
+        n_splits=config.n_splits, shuffle=True, random_state=config.random_state
     )
+    X, y, groups = config.X, config.y, config.groups
 
     results: list[FoldResult] = []
 
-    for model_name, clf in models.items():
+    for model_name, clf in config.models.items():
         aucs, aps, pos_rates = [], [], []
 
         for fold, (tr, te) in enumerate(sgkf.split(X, y, groups=groups), 1):
             X_tr, X_te = X.iloc[tr], X.iloc[te]
             y_tr, y_te = y.iloc[tr], y.iloc[te]
 
-            pipe = Pipeline([("prep", preprocess), ("clf", clf)])
+            pipe = Pipeline([("prep", config.preprocess), ("clf", clf)])
             pipe.fit(X_tr, y_tr)
 
             proba = pipe.predict_proba(X_te)[:, 1]
@@ -164,8 +167,8 @@ def evaluate_cv(
                 FoldResult(
                     model=model_name,
                     fold=fold,
-                    roc_auc=roc,
-                    pr_auc=pr,
+                    roc_auc=float(roc),
+                    pr_auc=float(pr),
                     pos_rate=pos,
                 )
             )
@@ -173,14 +176,13 @@ def evaluate_cv(
             aps.append(pr)
             pos_rates.append(pos)
 
-            if print_reports:
+            if config.print_reports:
                 print(f"\n{'=' * 80}\n{model_name} — fold {fold}")
                 print(
                     classification_report(
                         y_te,
                         pred,
                         digits=4,
-                        zero_division=0,
                     )
                 )
                 print(
@@ -220,52 +222,74 @@ def results_to_table(results: list[FoldResult]) -> pd.DataFrame:
     return summary
 
 
-def main() -> None:
-    DO_TUNING = True
+@dataclass(frozen=True)
+class BaselineConfig:
+    do_tuning: bool = True
+    tuning_trials: int = 15
+    cv_splits: int = 5
+    random_state: int = 42
+    print_reports: bool = True
 
-    df = load_dataset(DATA)
-    X, y, groups = prepare_xyg(df)
-    num_cols, cat_cols = pick_feature_columns(X)
 
-    xgb_params = {
-        "eval_metric": "logloss",
-        "n_jobs": -1,
-        "random_state": 42,
-        "n_estimators": 100,
-    }
+class BaselineTrainer:
+    def __init__(self, *, config: BaselineConfig | None = None):
+        if config is None:
+            config = BaselineConfig()
+        self.config = config
 
-    if DO_TUNING:
-        best_params = tune_xgboost(
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        X, y, groups = prepare_xyg(df)
+        num_cols, cat_cols = pick_feature_columns(X)
+
+        xgb_params: dict[str, object] = {
+            "eval_metric": "logloss",
+            "n_jobs": -1,
+            "random_state": self.config.random_state,
+            "n_estimators": 100,
+        }
+
+        if self.config.do_tuning:
+            tune_config = XGBoostTuneConfig(
+                X,
+                y,
+                groups,
+                num_cols,
+                cat_cols,
+                n_trials=self.config.tuning_trials,
+            )
+            best_params = tune_xgboost(tune_config)
+            xgb_params.update(best_params)
+            xgb_params["n_estimators"] = 100
+
+        print("Using numeric:", num_cols)
+        print("Using categorical:", cat_cols)
+        print("N:", len(y), "pos_rate:", float(y.mean()))
+        print("Unique groups:", int(groups.nunique()))
+
+        preprocess = make_preprocess(num_cols, cat_cols)
+        models = get_models()
+        models["xgboost"] = XGBClassifier(**xgb_params)
+
+        cv_config = CVConvig(
             X,
             y,
             groups,
-            num_cols,
-            cat_cols,
-            n_trials=15,
+            preprocess,
+            models,
+            n_splits=self.config.cv_splits,
+            random_state=self.config.random_state,
+            print_reports=self.config.print_reports,
         )
-        xgb_params.update(best_params)
-        xgb_params["n_estimators"] = 100
-    print("Using numeric:", num_cols)
-    print("Using categorical:", cat_cols)
-    print("N:", len(y), "pos_rate:", float(y.mean()))
-    print("Unique groups:", int(groups.nunique()))
+        results = evaluate_cv(cv_config)
 
-    preprocess = make_preprocess(num_cols, cat_cols)
-    models = get_models()
-    models["xgboost"] = XGBClassifier(**xgb_params)
+        return results_to_table(results)
 
-    results = evaluate_cv(
-        X,
-        y,
-        groups,
-        preprocess,
-        models,
-        n_splits=5,
-        random_state=42,
-        print_reports=True,
-    )
 
-    summary = results_to_table(results)
+def main() -> None:
+    trainer = BaselineTrainer()
+    df = load_dataset(DATA)
+
+    summary = trainer.run(df)
     print("\n" + "=" * 80)
     print("CV summary (mean±std)")
     print(summary.to_string(index=False))

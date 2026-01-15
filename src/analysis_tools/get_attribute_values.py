@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 
@@ -10,7 +11,7 @@ def get_attribute_values(file_path: Path, attribute_name: str) -> pd.Series:
     df = pd.read_csv(file_path)
     if attribute_name not in df.columns:
         raise ValueError(f"Attribute '{attribute_name}' not found in the df.")
-    col = df[attribute_name]
+    col = cast(pd.Series, df[attribute_name])
     output_dir = file_path.parent / "values"
     output_dir.mkdir(exist_ok=True)
     output_file = output_dir / f"{file_name}_{attribute_name}.csv"
@@ -19,7 +20,8 @@ def get_attribute_values(file_path: Path, attribute_name: str) -> pd.Series:
 
 
 def main(args: list[str]) -> None:
-    if len(args) != 2:
+    args_count = 2
+    if len(args) != args_count:
         print(
             "Usage: python3 get_attribute_values.py <path_to_csv_file> <col>",
         )

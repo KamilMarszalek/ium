@@ -1,23 +1,33 @@
-from __future__ import annotations
-
 import re
 from pathlib import Path
 
 import pandas as pd
-from features import host_features, listing_features, night_limit_cols, review_features
-from parse_amenities_cell import parse_amenities_cell
+from src.data_processing.features import (
+    host_features,
+    listing_features,
+    night_limit_cols,
+    parse_amenities_cell,
+    review_features,
+)
+from src.utils.constants import LONG_STAY_DURATION
+from src.utils.pandas import require_series
+
+DATA_DIR = Path("data")
+
+
+def _to_numeric_series(x: pd.Series) -> pd.Series:
+    out = pd.to_numeric(x, errors="coerce")
+    return out if isinstance(out, pd.Series) else pd.Series(out, index=x.index)
 
 
 def price_to_float(series: pd.Series) -> pd.Series:
-    s = series.astype("string")
-    s = s.str.replace(r"[^\d\.\-]", "", regex=True)
-    return pd.to_numeric(s, errors="coerce")
+    s = series.astype("string").str.replace(r"[^\d.\-]", "", regex=True)
+    return _to_numeric_series(s)
 
 
 def cut_percent_signs(series: pd.Series) -> pd.Series:
-    s = series.astype("string")
-    s = s.str.replace(r"[%]", "", regex=True)
-    return pd.to_numeric(s, errors="coerce")
+    s = series.astype("string").str.replace(r"[%]", "", regex=True)
+    return _to_numeric_series(s)
 
 
 def load_sessions(path: Path) -> pd.DataFrame:
@@ -46,8 +56,12 @@ def load_listing_features(path: Path) -> pd.DataFrame:
     out["price"] = price_to_float(out["price"])
     out["host_response_rate"] = cut_percent_signs(out["host_response_rate"])
     out["host_acceptance_rate"] = cut_percent_signs(out["host_acceptance_rate"])
-    out["min_ge_7"] = (out["minimum_nights"] >= 7).fillna(False).astype("int8")
-    out["max_lt_7"] = (out["maximum_nights"] < 7).fillna(False).astype("int8")
+    out["min_ge_7"] = (
+        (out["minimum_nights"] >= LONG_STAY_DURATION).fillna(False).astype("int8")
+    )
+    out["max_lt_7"] = (
+        (out["maximum_nights"] < LONG_STAY_DURATION).fillna(False).astype("int8")
+    )
     out["bath_is_shared"] = (
         (out["bathrooms_text"].astype("string").str.contains("shared", case=False))
         .fillna(False)
@@ -67,44 +81,47 @@ def load_user_features(path: Path) -> pd.DataFrame:
         dtype={"id": "string", "city": "string", "postal_code": "string"},
     )
     users["postal_prefix2"] = users["postal_code"].str.slice(0, 2)
-    return (
-        users.rename(columns={"id": "user_id", "city": "user_city"})[
-            ["user_id", "user_city", "postal_prefix2"]
-        ]
-        .dropna(subset=["user_id"])
-        .drop_duplicates(subset=["user_id"])
-    )
+
+    df = users.rename(columns={"id": "user_id", "city": "user_city"})
+    df = df.loc[:, ["user_id", "user_city", "postal_prefix2"]]
+    return df.dropna(subset=["user_id"]).drop_duplicates(subset=["user_id"])
 
 
 def build_bookings_from_sessions(sessions: pd.DataFrame) -> pd.DataFrame:
-    book = sessions[sessions["action"] == "book_listing"].copy()
-
-    book["checkin"] = pd.to_datetime(book.get("booking_date"), errors="coerce")
-    book["checkout"] = pd.to_datetime(
-        book.get("booking_duration"),
-        errors="coerce",
+    action = require_series(sessions, "action")
+    book = sessions.loc[action == "book_listing"].copy()
+    booking_date = require_series(book, "booking_date")
+    booking_duration = require_series(book, "booking_duration")
+    timestamp = require_series(book, "timestamp")
+    checkin: pd.Series = pd.to_datetime(booking_date, errors="coerce")
+    checkout: pd.Series = pd.to_datetime(booking_duration, errors="coerce")
+    booking_ts: pd.Series = pd.to_datetime(timestamp, errors="coerce")
+    nights: pd.Series = (checkout - checkin).dt.days
+    book = book.assign(
+        checkin=checkin,
+        checkout=checkout,
+        booking_ts=booking_ts,
+        nights=nights,
     )
-    book["booking_ts"] = pd.to_datetime(book.get("timestamp"), errors="coerce")
-
-    book["nights"] = (book["checkout"] - book["checkin"]).dt.days
-    book = book[book["nights"].notna()]
-    book = book[(book["nights"] > 0) & (book["nights"] <= 365)]
-
-    book["lead_time_days"] = (book["checkin"] - book["booking_ts"]).dt.days
-    book["long_stay"] = (book["nights"] >= 7).astype("int8")
-
+    nights_nonnull = require_series(book, "nights").notna()
+    book = book.loc[nights_nonnull].copy()
+    nights2 = require_series(book, "nights")
+    book = book.loc[(nights2 > 0) & (nights2 <= 365)].copy()  # noqa: PLR2004
+    checkin2 = require_series(book, "checkin")
+    booking_ts2 = require_series(book, "booking_ts")
+    book["lead_time_days"] = (checkin2 - booking_ts2).dt.days
+    nights3 = require_series(book, "nights")
+    book["long_stay"] = (nights3 >= LONG_STAY_DURATION).astype("int8")
     book["checkin_quarter"] = (
-        book["checkin"]
-        .dt.to_period("Q")
-        .astype(
-            "string",
-        )
+        require_series(book, "checkin").dt.to_period("Q").astype("string")
     )
-    book["checkin_month"] = book["checkin"].dt.month
-
+    book["checkin_month"] = require_series(book, "checkin").dt.month
     if "price" in book.columns:
-        book["price"] = pd.to_numeric(book["price"], errors="coerce")
-
+        price = require_series(book, "price")
+        out = pd.to_numeric(price, errors="coerce")
+        book["price"] = (
+            out if isinstance(out, pd.Series) else pd.Series(out, index=price.index)
+        )
     return book
 
 
@@ -139,7 +156,7 @@ def slugify_amenity(a: str) -> str:
     return s or "amenity"
 
 
-def topk_amenities(amen_lists: pd.Series, k: int = 100) -> list[str]:
+def topk_amenities(amen_lists: list[list[str]], k: int = 100) -> list[str]:
     vc = pd.Series([a for row in amen_lists for a in row]).value_counts()
     return list(vc.head(k).index)
 
@@ -153,13 +170,18 @@ def encode_amenities_topk(
         b["amenities_count"] = 0
         return b
 
-    b["amenities_list"] = b["amenities"].apply(parse_amenities_cell)
-    b["amenities_count"] = b["amenities_list"].apply(len).astype("int16")
+    amenities = require_series(b, "amenities")
+    parsed: list[list[str]] = [parse_amenities_cell(x) for x in amenities.tolist()]
 
-    top = topk_amenities(b["amenities_list"], k=k)
+    b["amenities_list"] = pd.Series(parsed, index=b.index)
+    b["amenities_count"] = pd.Series((len(xs) for xs in parsed), index=b.index).astype(
+        "int16"
+    )
 
-    colnames = {}
-    used = set()
+    top = topk_amenities(parsed, k=k)
+
+    colnames: dict[str, str] = {}
+    used: set[str] = set()
     for a in top:
         base = f"amen_{slugify_amenity(a)}"
         name = base
@@ -170,14 +192,15 @@ def encode_amenities_topk(
         used.add(name)
         colnames[a] = name
 
-    matrix = []
-    for xs in b["amenities_list"]:
+    matrix: list[list[int]] = []
+    for xs in parsed:
         s = set(xs)
         matrix.append([int(a in s) for a in top])
 
+    columns: list[str] = [colnames[a] for a in top]
     amen_df = pd.DataFrame(
         matrix,
-        columns=[colnames[a] for a in top],
+        columns=pd.Index(columns),
         index=b.index,
     )
     b = pd.concat([b, amen_df], axis=1)
@@ -227,27 +250,3 @@ def prepare_bookings_to_train(
     out = drop_unused_columns(bookings)
 
     return out
-
-
-if __name__ == "__main__":
-    data_dir = Path("data")
-
-    sessions = load_sessions(data_dir / "sessions.csv")
-    listing_feats = load_listing_features(data_dir / "listings.csv")
-    user_feats = load_user_features(data_dir / "users.csv")
-    sessions = sessions.merge(
-        listing_feats, on="listing_id", how="left", validate="m:1"
-    )
-
-    bookings_prepared = prepare_bookings_to_train(
-        sessions,
-        user_feats,
-        amen_topk=50,
-    )
-    bookings_prepared.to_csv(data_dir / "bookings_prepared.csv", index=False)
-    print(
-        "Saved:",
-        data_dir / "bookings_prepared.csv",
-        "rows:",
-        len(bookings_prepared),
-    )

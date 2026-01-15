@@ -4,9 +4,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from booking_builder import build_bookings_from_sessions
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import FuncFormatter, MultipleLocator
+from src.data_processing.bookings import build_bookings_from_sessions
 
 DISCRETE_COLUMNS = {
     "accommodates",

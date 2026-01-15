@@ -1,24 +1,29 @@
+from dataclasses import dataclass
+
 import numpy as np
 import optuna
 import pandas as pd
 from optuna.samplers import TPESampler
-from preprocess import make_preprocess
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedGroupKFold
+from src.modeling.preprocess import make_preprocess
 from xgboost import XGBClassifier
 
 
-def tune_xgboost(
-    X: pd.DataFrame,
-    y: pd.Series,
-    groups: pd.Series,
-    num_cols: list[str],
-    cat_cols: list[str],
-    n_trials: int = 20,
-) -> dict[str, object]:
+@dataclass
+class XGBoostTuneConfig:
+    X: pd.DataFrame
+    y: pd.Series
+    groups: pd.Series
+    num_cols: list[str]
+    cat_cols: list[str]
+    n_trials: int = 20
+
+
+def tune_xgboost(config: XGBoostTuneConfig) -> dict[str, object]:
     print(f"\n{'=' * 30} START TUNING {'=' * 30}")
 
-    def objective(trial):
+    def objective(trial: optuna.Trial) -> float:
         param = {
             "verbosity": 0,
             "objective": "binary:logistic",
@@ -44,10 +49,10 @@ def tune_xgboost(
         sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
         aucs = []
 
-        for tr_idx, te_idx in sgkf.split(X, y, groups=groups):
-            X_tr, X_te = X.iloc[tr_idx], X.iloc[te_idx]
-            y_tr, y_te = y.iloc[tr_idx], y.iloc[te_idx]
-            preprocessor = make_preprocess(num_cols, cat_cols)
+        for tr_idx, te_idx in sgkf.split(config.X, config.y, groups=config.groups):
+            X_tr, X_te = config.X.iloc[tr_idx], config.X.iloc[te_idx]
+            y_tr, y_te = config.y.iloc[tr_idx], config.y.iloc[te_idx]
+            preprocessor = make_preprocess(config.num_cols, config.cat_cols)
 
             X_tr_trans = preprocessor.fit_transform(X_tr)
             X_te_trans = preprocessor.transform(X_te)
@@ -64,11 +69,11 @@ def tune_xgboost(
             roc = roc_auc_score(y_te, preds)
             aucs.append(roc)
 
-        return np.mean(aucs)
+        return float(np.mean(aucs))
 
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(objective, n_trials=n_trials)
+    study.optimize(objective, n_trials=config.n_trials)
 
     print(f"Best ROC AUC: {study.best_value:.4f}")
     print("Best params:", study.best_params)

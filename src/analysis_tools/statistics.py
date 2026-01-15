@@ -1,13 +1,11 @@
 from math import sqrt
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
 from sklearn.feature_selection import mutual_info_classif
 
-DATA = Path("data/bookings_prepared.csv")
-TARGET = "long_stay"
+from utils.constants import DATA, TARGET
 
 
 def cramers_v(
