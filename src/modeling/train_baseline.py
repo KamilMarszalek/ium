@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import src.utils.pandas as pandas_utils
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -15,12 +14,13 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
+from xgboost import XGBClassifier
+
+import src.utils.pandas as pandas_utils
 from src.data_processing.features import get_amen_col_names, review_features
 from src.modeling.preprocess import make_preprocess
 from src.modeling.tune import XGBoostTuneConfig, tune_xgboost
-from xgboost import XGBClassifier
-
-from utils.constants import DATA, TARGET
+from src.utils.constants import DATA, TARGET
 
 GROUP_COL = "listing_id"
 DROP_ALWAYS = {"user_id"}
