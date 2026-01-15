@@ -6,8 +6,9 @@ import pandas as pd
 from optuna.samplers import TPESampler
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedGroupKFold
-from src.modeling.preprocess import make_preprocess
 from xgboost import XGBClassifier
+
+from src.modeling.preprocess import make_preprocess
 
 
 @dataclass
@@ -46,10 +47,14 @@ def tune_xgboost(config: XGBoostTuneConfig) -> dict[str, object]:
             "reg_lambda": trial.suggest_float("reg_lambda", 0.0, 10.0),
         }
 
-        sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
+        sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
         aucs = []
 
-        for tr_idx, te_idx in sgkf.split(config.X, config.y, groups=config.groups):
+        for tr_idx, te_idx in sgkf.split(
+            config.X,
+            config.y,
+            groups=config.groups,
+        ):
             X_tr, X_te = config.X.iloc[tr_idx], config.X.iloc[te_idx]
             y_tr, y_te = config.y.iloc[tr_idx], config.y.iloc[te_idx]
             preprocessor = make_preprocess(config.num_cols, config.cat_cols)

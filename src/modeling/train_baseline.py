@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     average_precision_score,
@@ -41,8 +40,6 @@ NUM_CANDIDATES = [
     "host_response_rate",
     "host_acceptance_rate",
     "segment_id",
-    # "lead_time_days",
-    # "checkin_year",
 ] + review_features
 CAT_CANDIDATES = [
     "room_type",
@@ -54,14 +51,7 @@ CAT_CANDIDATES = [
     "bath_is_private",
     "instant_bookable",
     "segment_id",
-    # "property_type",
-    # "checkin_month",
-    # "checkin_dow",
-    # "checkin_is_weekend",
-    # "booking_month",
-    # "booking_dow",
-    # "booking_hour",
-    # "lead_time_bucket",
+    "property_type",
 ]
 
 
@@ -131,7 +121,6 @@ def get_models() -> dict[str, object]:
     return {
         "dummy_most_frequent": DummyClassifier(strategy="most_frequent"),
         "logreg": LogisticRegression(max_iter=1000, n_jobs=-1),
-        "random_forest": RandomForestClassifier(n_jobs=-1, random_state=42),
         "xgboost": XGBClassifier(
             eval_metric="logloss",
             n_jobs=-1,
@@ -142,7 +131,9 @@ def get_models() -> dict[str, object]:
 
 def evaluate_cv(config: CVConvig) -> list[FoldResult]:
     sgkf = StratifiedGroupKFold(
-        n_splits=config.n_splits, shuffle=True, random_state=config.random_state
+        n_splits=config.n_splits,
+        shuffle=True,
+        random_state=config.random_state,
     )
     X, y, groups = config.X, config.y, config.groups
 
