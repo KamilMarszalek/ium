@@ -40,6 +40,7 @@ NUM_CANDIDATES = [
     "amenities_count",
     "host_response_rate",
     "host_acceptance_rate",
+    "segment_id",
     # "lead_time_days",
     # "checkin_year",
 ] + review_features
@@ -52,6 +53,7 @@ CAT_CANDIDATES = [
     "bath_is_shared",
     "bath_is_private",
     "instant_bookable",
+    "segment_id",
     # "property_type",
     # "checkin_month",
     # "checkin_dow",
