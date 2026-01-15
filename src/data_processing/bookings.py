@@ -53,6 +53,10 @@ def load_listing_features(path: Path) -> pd.DataFrame:
             listing_features + night_limit_cols + host_features + review_features,
         ]
     )
+    segment_df = pd.read_csv(
+        "data/listing_segments.csv", dtype={"listing_id": "string"}
+    )
+    out = out.merge(segment_df, on="listing_id", how="left", validate="1:1")
     out["price"] = price_to_float(out["price"])
     out["host_response_rate"] = cut_percent_signs(out["host_response_rate"])
     out["host_acceptance_rate"] = cut_percent_signs(out["host_acceptance_rate"])
