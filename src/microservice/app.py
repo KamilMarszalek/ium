@@ -1,5 +1,5 @@
-import hashlib
 import json
+import random
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -9,6 +9,7 @@ import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel
 from sklearn.pipeline import Pipeline
+
 from src.utils.constants import AB_LOG_PATH, MODEL_A_PATH, MODEL_B_PATH
 
 AB_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -43,10 +44,8 @@ class FeedbackIn(BaseModel):
     true_long_stay: int
 
 
-def choose_variant(user_id: str | None, listing_id: str | None) -> str:
-    key = user_id or listing_id or str(uuid.uuid4())
-    h = hashlib.md5(key.encode("utf-8")).hexdigest()  # noqa: S324
-    return "A" if int(h, 16) % 2 == 0 else "B"
+def choose_variant() -> str:
+    return "A" if random.uniform(0, 1) < 0.5 else "B"  # noqa: PLR2004
 
 
 def log_event(obj: dict[str, Any]) -> None:
@@ -62,7 +61,7 @@ def health() -> dict[str, str]:
 
 @app.post("/predict", response_model=PredictOut)
 def predict(inp: PredictIn):
-    variant = choose_variant(inp.user_id, inp.listing_id)
+    variant = choose_variant()
     model = model_a if variant == "A" else model_b
     model_name = "baseline" if variant == "A" else "target"
 
@@ -95,7 +94,6 @@ def predict(inp: PredictIn):
 
 
 @app.post("/feedback")
-@app.post("/ium/feedback")
 def feedback(inp: FeedbackIn):
     log_event(
         {
