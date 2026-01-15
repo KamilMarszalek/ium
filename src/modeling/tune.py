@@ -45,6 +45,11 @@ def tune_xgboost(config: XGBoostTuneConfig) -> dict[str, object]:
             ),
             "reg_alpha": trial.suggest_float("reg_alpha", 0.0, 10.0),
             "reg_lambda": trial.suggest_float("reg_lambda", 0.0, 10.0),
+            "scale_pos_weight": trial.suggest_float(
+                "scale_pos_weight",
+                0.5,
+                2.0,
+            ),
         }
 
         sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
