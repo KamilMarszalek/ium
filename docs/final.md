@@ -27,11 +27,12 @@ W praktyce oznaczało to wykorzystanie głównie:
 - cech oferty z `listings.csv`, które opisują standard i warunki pobytu,
 - udogodnień (amenities), ponieważ są bezpośrednio „wdrażalne”.
 
-Sprawdziliśmy, że obecnie w kluczowych atrybutach albo nie ma braków danych, albo
-są one nieliczne i można je uzupełnić prostymi metodami (np. medianą lub
+Sprawdziliśmy, że obecnie w kluczowych atrybutach albo nie ma braków danych,
+albo są one nieliczne i można je uzupełnić prostymi metodami (np. medianą lub
 najczęstszą wartością).
 
-Zauważyliśmy, również, że w porównaniu do poprzedniego zbioru danych, jesteśmy w stanie złączyć rezerwacje z cechami ofert (`join_coverage` wzrosło do 100%).
+Zauważyliśmy, również, że w porównaniu do poprzedniego zbioru danych, jesteśmy w
+stanie złączyć rezerwacje z cechami ofert (`join_coverage` wzrosło do 100%).
 
 ### 2.1 Dane rezerwacji (podstawa do targetu)
 
@@ -89,10 +90,12 @@ może odzwierciedlać stan rynku i decyzje hostów z przyszłości (np. po wzro�
 popytu lub po zmianach strategii), których nie było w momencie rezerwacji. W
 takim przypadku model uczy się sygnału dostępnego dopiero po czasie.
 
-Z tego powodu `price` został wykluczony z cech wejściowych, pomimo, że jest najbardziej skorelowany z przewidywanym targetem.
-Wykorzystanie samego atrybytu `price` dawało bardzo wysokie wyniki, ale
-model byłby bezużyteczny w praktyce. Niewątpliwie wykorzystalibyśmy ten sygnał, gdybyśmy mieli dostęp do historycznych cen odpowiadających każdej rezerwacji.
-Dla potencjalnych gości cena często jest najistotniejszym czynnikiem decyzyjnym.
+Z tego powodu `price` został wykluczony z cech wejściowych, pomimo, że jest
+najbardziej skorelowany z przewidywanym targetem. Wykorzystanie samego atrybytu
+`price` dawało bardzo wysokie wyniki, ale model byłby bezużyteczny w praktyce.
+Niewątpliwie wykorzystalibyśmy ten sygnał, gdybyśmy mieli dostęp do
+historycznych cen odpowiadających każdej rezerwacji. Dla potencjalnych gości
+cena często jest najistotniejszym czynnikiem decyzyjnym.
 
 ### 3.2 Dane personalne użytkownika
 
@@ -117,14 +120,16 @@ segmentacji lub analiz marketingowych, ale w tym projekcie priorytetem były
 cechy oferty, które są bezpośrednio modyfikowalne przez właściciela.
 
 ### 3.5 Cechy tekstowe z `listings.csv`
+
 W `listings.csv` są pola tekstowe (np. `description`, `neighborhood_overview`),
 które potencjalnie mogą zawierać sygnały istotne dla dłuższego pobytu (np.
 bliskość atrakcji, charakter okolicy). Podjęliśmy próbe ich wykorzystania
-poprzez zbudowanie embeddingów, a następnie pogrupowanie obiektów do odpowiednich 
-klastrów. Wstępne eksperymenty nie wykazały jednak istotnej poprawy wyników
-modelu. Cechy uzyskane w ten sposób niosły słaby sygnał względem klasy docelowej,
-były trudne do interpretacji i nie przekładały się na praktyczne rekomendacje
-dla właścicieli. Z tego powodu zrezygnowano z ich użycia w finalnym modelu.
+poprzez zbudowanie embeddingów, a następnie pogrupowanie obiektów do
+odpowiednich klastrów. Wstępne eksperymenty nie wykazały jednak istotnej poprawy
+wyników modelu. Cechy uzyskane w ten sposób niosły słaby sygnał względem klasy
+docelowej, były trudne do interpretacji i nie przekładały się na praktyczne
+rekomendacje dla właścicieli. Z tego powodu zrezygnowano z ich użycia w finalnym
+modelu.
 
 ## 4. Modele i walidacja
 
@@ -133,10 +138,13 @@ Zbudowano dwa modele:
 - model bazowy: regresja logistyczna,
 - model docelowy: XGBoost.
 
-Oba modele są trenowane jako pipeline składający się z dwóch etapów: 
-- preprocessingu, 
-- treningu klasyfikatora. 
-Dla cech numerycznych zastosowano imputację medianą oraz dodanie wskaźnika braków. Dla cech kategorycznych zastosowano imputację wartością najczęstszą i kodowanie One-Hot. Pozwala to stabilnie obsługiwać braki danych oraz nowe kategorie w danych testowych/produkcyjnych.
+Oba modele są trenowane jako pipeline składający się z dwóch etapów:
+
+- preprocessingu,
+- treningu klasyfikatora. Dla cech numerycznych zastosowano imputację medianą
+  oraz dodanie wskaźnika braków. Dla cech kategorycznych zastosowano imputację
+  wartością najczęstszą i kodowanie One-Hot. Pozwala to stabilnie obsługiwać
+  braki danych oraz nowe kategorie w danych testowych/produkcyjnych.
 
 Regresja logistyczna daje prosty punkt odniesienia i łatwo ją interpretować.
 XGBoost jest bardziej elastyczny i może uchwycić nieliniowe zależności oraz
@@ -149,9 +157,20 @@ jednocześnie w zbiorze treningowym i testowym, co mogłoby sztucznie zawyżać
 wyniki. Gdybyśmy mieli do dyspozycji dane z kolejnych lat, rozważylibyśmy walidację
 czasową, ale w obecnym zbiorze danych nie było takiej możliwości.
 
-Do oceny jakości użyto metryk rankingowych odpornych na niezbalansowanie klas: ROC-AUC oraz PR-AUC, a dodatkowo raportowano metryki takie jak precision/recall/F1 dla wybranego progu decyzyjnego. PR-AUC jest szczególnie informatywne przy relatywnie rzadszej klasie pozytywnej (u nas ok. 28%). W eksperymentach porównano także model naiwny zwracający klasę częstościową jako punkt odniesienia.
+Do oceny jakości użyto metryk rankingowych odpornych na niezbalansowanie klas:
+ROC-AUC oraz PR-AUC, a dodatkowo raportowano metryki takie jak
+precision/recall/F1 dla wybranego progu decyzyjnego. PR-AUC jest szczególnie
+informatywne przy relatywnie rzadszej klasie pozytywnej (u nas ok. 28%). W
+eksperymentach porównano także model naiwny zwracający klasę częstościową jako
+punkt odniesienia.
 
-Dla XGBoost wykonano automatyczne strojenie hiperparametrów metodami bayesowskimi (pakiet Optuna). Funkcją celu była średnia ROC-AUC z 5-krotnej walidacji krzyżowej z grupowaniem po listing_id. Strojenie obejmowało m.in. max_depth, min_child_weight, subsample, colsample_bytree, regularyzację (reg_alpha, reg_lambda) oraz wagę klasy pozytywnej (scale_pos_weight). Użyto early_stopping_rounds, aby ograniczyć przeuczenie w trakcie treningu boostingowego.
+Dla XGBoost wykonano automatyczne strojenie hiperparametrów metodami
+bayesowskimi (pakiet Optuna). Funkcją celu była średnia ROC-AUC z 5-krotnej
+walidacji krzyżowej z grupowaniem po listing_id. Strojenie obejmowało m.in.
+max_depth, min_child_weight, subsample, colsample_bytree, regularyzację
+(reg_alpha, reg_lambda) oraz wagę klasy pozytywnej (scale_pos_weight). Użyto
+early_stopping_rounds, aby ograniczyć przeuczenie w trakcie treningu
+boostingowego.
 
 ## 5. Ograniczenia obecnego podejścia
 
