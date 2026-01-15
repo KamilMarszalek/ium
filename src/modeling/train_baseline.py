@@ -206,7 +206,7 @@ def results_to_table(results: list[FoldResult]) -> pd.DataFrame:
 @dataclass(frozen=True)
 class BaselineConfig:
     do_tuning: bool = True
-    tuning_trials: int = 15
+    tuning_trials: int = 20
     cv_splits: int = 5
     random_state: int = 42
     print_reports: bool = True

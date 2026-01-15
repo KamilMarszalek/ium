@@ -47,8 +47,8 @@ def tune_xgboost(config: XGBoostTuneConfig) -> dict[str, object]:
             "reg_lambda": trial.suggest_float("reg_lambda", 0.0, 10.0),
             "scale_pos_weight": trial.suggest_float(
                 "scale_pos_weight",
-                0.5,
-                2.0,
+                0.3,
+                3.0,
             ),
         }
 
