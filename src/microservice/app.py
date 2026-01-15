@@ -45,7 +45,7 @@ class FeedbackIn(BaseModel):
 
 
 def choose_variant() -> str:
-    return "A" if random.uniform(0, 1) < 0.5 else "B"  # noqa: PLR2004
+    return "A" if random.uniform(0, 1) < 0.5 else "B"
 
 
 def log_event(obj: dict[str, Any]) -> None:
@@ -68,7 +68,7 @@ def predict(inp: PredictIn):
     X = pd.DataFrame([inp.features])
 
     proba = float(model.predict_proba(X)[:, 1][0])
-    pred = int(proba >= 0.5)  # noqa: PLR2004
+    pred = int(proba >= 0.5)
     rid = str(uuid.uuid4())
 
     log_event(
