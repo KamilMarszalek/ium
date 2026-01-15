@@ -18,7 +18,7 @@ from src.data_processing.features import get_amen_col_names, review_features
 from src.modeling.preprocess import make_preprocess
 from src.modeling.tune import XGBoostTuneConfig, tune_xgboost
 from src.utils.constants import DATA, TARGET
-from src.utils.models import get_models
+from src.utils.models import Models, get_models
 
 GROUP_COL = "listing_id"
 DROP_ALWAYS = {"user_id"}
@@ -64,12 +64,12 @@ class FoldResult:
 
 
 @dataclass(frozen=True)
-class CVConvig:
+class CVConfig:
     X: pd.DataFrame
     y: pd.Series
     groups: pd.Series
     preprocess: ColumnTransformer
-    models: dict[str, object]
+    models: Models
     n_splits: int = 5
     random_state: int = 42
     print_reports: bool = True
@@ -116,7 +116,7 @@ def pick_feature_columns(X: pd.DataFrame) -> tuple[list[str], list[str]]:
     return num_cols, cat_cols
 
 
-def evaluate_cv(config: CVConvig) -> list[FoldResult]:
+def evaluate_cv(config: CVConfig) -> list[FoldResult]:
     sgkf = StratifiedGroupKFold(
         n_splits=config.n_splits,
         shuffle=True,
@@ -221,6 +221,7 @@ class BaselineTrainer:
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
         X, y, groups = prepare_xyg(df)
         num_cols, cat_cols = pick_feature_columns(X)
+        models = get_models()
 
         xgb_params: dict[str, object] = {
             "eval_metric": "logloss",
@@ -241,6 +242,7 @@ class BaselineTrainer:
             best_params = tune_xgboost(tune_config)
             xgb_params.update(best_params)
             xgb_params["n_estimators"] = 100
+            models.xgboost = XGBClassifier(**xgb_params)
 
         if self.config.print_reports:
             print("Using numeric:", num_cols)
@@ -249,10 +251,8 @@ class BaselineTrainer:
             print("Unique groups:", int(groups.nunique()))
 
         preprocess = make_preprocess(num_cols, cat_cols)
-        models = get_models()
-        models["xgboost"] = XGBClassifier(**xgb_params)
 
-        cv_config = CVConvig(
+        cv_config = CVConfig(
             X,
             y,
             groups,

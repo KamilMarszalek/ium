@@ -19,8 +19,8 @@ def main() -> None:
 
     preprocess = make_preprocess(num_cols, cat_cols)
     models = get_models()
-    model_a = models["logreg"]
-    model_b = models["xgboost"]
+    model_a = models.logreg
+    model_b = models.xgboost
 
     pipe_a = Pipeline([("prep", preprocess), ("clf", model_a)])
     pipe_b = Pipeline([("prep", preprocess), ("clf", model_b)])
