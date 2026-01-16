@@ -528,6 +528,7 @@ dependencies = [
     { name = "sentence-transformers" },
     { name = "shap" },
     { name = "sklearn-utils" },
+    { name = "statsmodels" },
     { name = "uvicorn" },
     { name = "xgboost" },
 ]
@@ -556,6 +557,7 @@ requires-dist = [
     { name = "sentence-transformers", specifier = ">=5.2.0" },
     { name = "shap", specifier = ">=0.49.1" },
     { name = "sklearn-utils", specifier = ">=0.0.15" },
+    { name = "statsmodels", specifier = ">=0.14.6" },
     { name = "uvicorn", specifier = ">=0.40.0" },
     { name = "xgboost", specifier = "==3.0.0" },
 ]
